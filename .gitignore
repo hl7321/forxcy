@@ -1,0 +1,9 @@
+.DS_Store
+.superpowers/
+.worktrees/
+.impeccable/review/
+work/
+__pycache__/
+*.py[cod]
+.env
+secret

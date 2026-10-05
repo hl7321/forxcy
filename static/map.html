@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN" data-sharing="active" data-visibility="visible">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1622">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>我的位置 · 实时共享</title>
+  <link rel="stylesheet" href="/static/leaflet.css">
+  <link rel="stylesheet" href="/static/theme.css">
+  <link rel="stylesheet" href="/static/map.css">
+</head>
+<body>
+  <main class="map-shell">
+    <header class="map-header">
+      <div class="map-heading">
+        <h1>我的位置</h1>
+        <p>位置由共享人的 iPhone 上报</p>
+      </div>
+      <p class="map-status" id="status-pill">
+        <span aria-hidden="true"></span>
+        <span id="status-text">共享中</span>
+      </p>
+    </header>
+
+    <section class="map-stage" aria-label="共享人的最后位置">
+      <div id="map"></div>
+      <div class="map-state" id="map-waiting" role="status">
+        <p>正在等待共享人的手机上报位置…</p>
+      </div>
+      <div class="map-state" id="map-stopped" role="status" hidden>
+        <strong>已停止共享位置</strong>
+        <p>共享人重新开启后，这里会自动恢复。</p>
+      </div>
+      <div class="map-state map-state-quiet" id="map-stale" role="status" hidden>
+        <p>这是最后已知位置，可能已经过期。</p>
+      </div>
+      <div class="map-state" id="map-error" role="alert" hidden>
+        <p>地图暂时没有加载出来。</p>
+        <button id="retry-map" type="button">重试地图</button>
+      </div>
+    </section>
+
+    <section class="location-summary" aria-label="位置状态">
+      <div>
+        <strong id="addr">实时位置</strong>
+        <span id="batt-chip">电量 --</span>
+      </div>
+      <p id="last-update">最后更新：<b>--</b></p>
+      <a href="/api/logout">退出查看</a>
+    </section>
+  </main>
+
+  <script src="/static/leaflet.js"></script>
+  <script src="/static/experience-core.js"></script>
+  <script src="/static/map.js"></script>
+</body>
+</html>

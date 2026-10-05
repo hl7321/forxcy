@@ -1,0 +1,79 @@
+:root {
+  --night-1: #172333;
+  --night-2: #111D2A;
+  --night-3: #0C1622;
+  --ink: #F2EFE9;
+  --muted: #9FADB8;
+  --anchor: #E8AD87;
+  --map-ground: #DFE3E1;
+  --focus: #E8AD87;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --serif: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  color-scheme: dark;
+  background: var(--night-3);
+  scroll-behavior: smooth;
+  scrollbar-color: rgba(232, 173, 135, 0.46) var(--night-3);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  min-height: 44px;
+}
+
+button:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+::selection {
+  color: var(--night-3);
+  background: var(--anchor);
+}
+
+input {
+  caret-color: var(--anchor);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+[hidden] {
+  display: none !important;
+}

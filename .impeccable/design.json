@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-31T01:48:22Z",
+  "title": "Design System: 星野坐标",
+  "extensions": {
+    "colorMeta": {
+      "night-horizon": {
+        "role": "neutral",
+        "displayName": "夜幕远层 / Night Horizon",
+        "canonical": "#172333",
+        "tonalRamp": [
+          "oklch(15% 0.035 256)",
+          "oklch(27% 0.035 256)",
+          "oklch(39% 0.035 256)",
+          "oklch(51% 0.035 256)",
+          "oklch(63% 0.035 256)",
+          "oklch(75% 0.035 256)",
+          "oklch(87% 0.035 256)",
+          "oklch(95% 0.035 256)"
+        ]
+      },
+      "night-mid": {
+        "role": "neutral",
+        "displayName": "夜幕中层 / Night Mid",
+        "canonical": "#111D2A",
+        "tonalRamp": [
+          "oklch(15% 0.031 251)",
+          "oklch(27% 0.031 251)",
+          "oklch(39% 0.031 251)",
+          "oklch(51% 0.031 251)",
+          "oklch(63% 0.031 251)",
+          "oklch(75% 0.031 251)",
+          "oklch(87% 0.031 251)",
+          "oklch(95% 0.031 251)"
+        ]
+      },
+      "night-deep": {
+        "role": "neutral",
+        "displayName": "夜幕深层 / Night Deep",
+        "canonical": "#0C1622",
+        "tonalRamp": [
+          "oklch(15% 0.029 254)",
+          "oklch(27% 0.029 254)",
+          "oklch(39% 0.029 254)",
+          "oklch(51% 0.029 254)",
+          "oklch(63% 0.029 254)",
+          "oklch(75% 0.029 254)",
+          "oklch(87% 0.029 254)",
+          "oklch(95% 0.029 254)"
+        ]
+      },
+      "soft-ivory": {
+        "role": "neutral",
+        "displayName": "柔和米白 / Soft Ivory",
+        "canonical": "#F2EFE9",
+        "tonalRamp": [
+          "oklch(15% 0.009 85)",
+          "oklch(27% 0.009 85)",
+          "oklch(39% 0.009 85)",
+          "oklch(51% 0.009 85)",
+          "oklch(63% 0.009 85)",
+          "oklch(75% 0.009 85)",
+          "oklch(87% 0.009 85)",
+          "oklch(95% 0.009 85)"
+        ]
+      },
+      "muted-blue-gray": {
+        "role": "neutral",
+        "displayName": "静默蓝灰 / Muted Blue Gray",
+        "canonical": "#9FADB8",
+        "tonalRamp": [
+          "oklch(15% 0.022 242)",
+          "oklch(27% 0.022 242)",
+          "oklch(39% 0.022 242)",
+          "oklch(51% 0.022 242)",
+          "oklch(63% 0.022 242)",
+          "oklch(75% 0.022 242)",
+          "oklch(87% 0.022 242)",
+          "oklch(95% 0.022 242)"
+        ]
+      },
+      "warm-coordinate": {
+        "role": "primary",
+        "displayName": "暖色坐标 / Warm Coordinate",
+        "canonical": "#E8AD87",
+        "tonalRamp": [
+          "oklch(15% 0.086 54)",
+          "oklch(27% 0.086 54)",
+          "oklch(39% 0.086 54)",
+          "oklch(51% 0.086 54)",
+          "oklch(63% 0.086 54)",
+          "oklch(75% 0.086 54)",
+          "oklch(87% 0.086 54)",
+          "oklch(95% 0.086 54)"
+        ]
+      },
+      "map-ground": {
+        "role": "neutral",
+        "displayName": "雾灰地图 / Mist Map Ground",
+        "canonical": "#DFE3E1",
+        "tonalRamp": [
+          "oklch(15% 0.005 165)",
+          "oklch(27% 0.005 165)",
+          "oklch(39% 0.005 165)",
+          "oklch(51% 0.005 165)",
+          "oklch(63% 0.005 165)",
+          "oklch(75% 0.005 165)",
+          "oklch(87% 0.005 165)",
+          "oklch(95% 0.005 165)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "空间标题 / Spatial Display",
+        "purpose": "首屏的唯一大标题，建立锚点世界。"
+      },
+      "headline": {
+        "displayName": "任务标题 / Task Headline",
+        "purpose": "密码等单一任务的清晰起点。"
+      },
+      "action-title": {
+        "displayName": "入口动作 / Entry Action",
+        "purpose": "双入口的主动作标题。"
+      },
+      "body": {
+        "displayName": "界面正文 / Interface Body",
+        "purpose": "状态、说明与反馈。"
+      },
+      "letter": {
+        "displayName": "信件正文 / Letter Body",
+        "purpose": "只用于公开信的书面阅读。"
+      },
+      "label": {
+        "displayName": "状态标签 / Status Label",
+        "purpose": "地图状态、副标题与紧凑元数据。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "coordinate-glow",
+        "value": "0 0 0 8px rgba(232, 173, 135, 0.08), 0 0 30px rgba(232, 173, 135, 0.32)",
+        "purpose": "首页、过场暖色坐标的有限微光。"
+      },
+      {
+        "name": "map-stage-lift",
+        "value": "0 18px 48px rgba(2, 8, 14, 0.38)",
+        "purpose": "只用于大地图主体与夜色背景的分离。"
+      },
+      {
+        "name": "pin-grounding",
+        "value": "0 4px 14px rgba(12, 22, 34, 0.48)",
+        "purpose": "让位置标记圆芯在灰蓝地图上保持边界。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-state",
+        "value": "160ms ease-out",
+        "purpose": "密码格边框和底色的快速状态反馈。"
+      },
+      {
+        "name": "entry-action",
+        "value": "180ms ease-out",
+        "purpose": "入口与文字导航的颜色、细线反馈。"
+      },
+      {
+        "name": "letter-fade",
+        "value": "900ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "信件路线中过场文字退入夜色。"
+      },
+      {
+        "name": "pin-pulse",
+        "value": "2.2s cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "共享中位置标记的一次次低频扩散；停止、隐藏或减少动态时关闭。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-phone",
+        "value": "359px"
+      },
+      {
+        "name": "map-wide",
+        "value": "800px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Entry Action",
+      "kind": "button",
+      "refersTo": "entry-action-primary",
+      "description": "首访主要入口，以暖色文字、细线和轻量箭头表达优先级。",
+      "html": "<button class=\"ds-entry-primary\" type=\"button\"><span>读一封信</span><small>有几句话，想安静地留在这里。</small></button>",
+      "css": ".ds-entry-primary { position: relative; width: 100%; min-height: 44px; padding: 18px 36px 18px 4px; color: var(--anchor); text-align: start; cursor: pointer; background: transparent; border: 0; border-block-end: 1px solid rgba(242, 239, 233, 0.14); transition: color 180ms ease-out, border-color 180ms ease-out; } .ds-entry-primary::after { position: absolute; top: 25px; right: 7px; width: 8px; height: 8px; border-block-start: 1px solid currentColor; border-inline-end: 1px solid currentColor; content: \"\"; transform: rotate(45deg); } .ds-entry-primary span { display: block; font-size: clamp(18px, 5vw, 22px); font-weight: 550; letter-spacing: -0.02em; } .ds-entry-primary small { display: block; margin-top: 8px; color: var(--muted); font-size: 16px; line-height: 1.55; } .ds-entry-primary:hover { color: var(--anchor); border-block-end-color: rgba(232, 173, 135, 0.46); } .ds-entry-primary:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; } .ds-entry-primary:active { color: var(--anchor); }"
+    },
+    {
+      "name": "Secondary Entry Action",
+      "kind": "button",
+      "refersTo": "entry-action-secondary",
+      "description": "始终可见的次要入口，保持直达位置的选择权。",
+      "html": "<button class=\"ds-entry-secondary\" type=\"button\"><span>查看位置</span><small>直接看看我现在在哪里。</small></button>",
+      "css": ".ds-entry-secondary { position: relative; width: 100%; min-height: 44px; padding: 18px 36px 18px 4px; color: var(--ink); text-align: start; cursor: pointer; background: transparent; border: 0; border-block-end: 1px solid rgba(242, 239, 233, 0.14); transition: color 180ms ease-out, border-color 180ms ease-out; } .ds-entry-secondary::after { position: absolute; top: 25px; right: 7px; width: 8px; height: 8px; border-block-start: 1px solid currentColor; border-inline-end: 1px solid currentColor; content: \"\"; transform: rotate(45deg); } .ds-entry-secondary span { display: block; font-size: clamp(18px, 5vw, 22px); font-weight: 550; letter-spacing: -0.02em; } .ds-entry-secondary small { display: block; margin-top: 8px; color: var(--muted); font-size: 16px; line-height: 1.55; } .ds-entry-secondary:hover { color: var(--anchor); border-block-end-color: rgba(232, 173, 135, 0.46); } .ds-entry-secondary:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; } .ds-entry-secondary:active { color: var(--anchor); }"
+    },
+    {
+      "name": "Letter Navigation",
+      "kind": "nav",
+      "description": "信件中保持返回与继续两条路径的平面文字导航。",
+      "html": "<nav class=\"ds-letter-nav\" aria-label=\"信件导航\"><button class=\"ds-letter-back\" type=\"button\">返回</button><button class=\"ds-letter-continue\" type=\"button\">继续前往位置</button></nav>",
+      "css": ".ds-letter-nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; } .ds-letter-back, .ds-letter-continue { color: var(--muted); cursor: pointer; background: transparent; border: 0; } .ds-letter-back { min-height: 44px; padding: 8px 4px; text-decoration: underline; text-decoration-color: rgba(159, 173, 184, 0.42); text-underline-offset: 5px; } .ds-letter-continue { min-height: 48px; padding: 8px 2px; margin-inline-start: auto; color: var(--anchor); border-block-end: 1px solid rgba(232, 173, 135, 0.38); } .ds-letter-back:hover, .ds-letter-continue:hover { color: var(--anchor); } .ds-letter-back:focus-visible, .ds-letter-continue:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; } .ds-letter-back:active, .ds-letter-continue:active { color: var(--anchor); }"
+    },
+    {
+      "name": "Six-Digit OTP",
+      "kind": "input",
+      "refersTo": "otp-field",
+      "description": "六个独立数字格组成的访问码输入，聚焦和填写使用同一暖色色调。",
+      "html": "<div class=\"ds-otp\" role=\"group\" aria-label=\"六位访问码\"><input class=\"ds-otp-field\" inputmode=\"numeric\" maxlength=\"1\" aria-label=\"访问码第 1 位\"><input class=\"ds-otp-field\" inputmode=\"numeric\" maxlength=\"1\" aria-label=\"访问码第 2 位\"><input class=\"ds-otp-field\" inputmode=\"numeric\" maxlength=\"1\" aria-label=\"访问码第 3 位\"><input class=\"ds-otp-field\" inputmode=\"numeric\" maxlength=\"1\" aria-label=\"访问码第 4 位\"><input class=\"ds-otp-field\" inputmode=\"numeric\" maxlength=\"1\" aria-label=\"访问码第 5 位\"><input class=\"ds-otp-field\" inputmode=\"numeric\" maxlength=\"1\" aria-label=\"访问码第 6 位\"></div>",
+      "css": ".ds-otp { display: flex; justify-content: center; gap: clamp(6px, 2vw, 12px); width: 100%; } .ds-otp-field { width: clamp(40px, 12vw, 48px); height: 56px; padding: 0; color: var(--ink); caret-color: var(--anchor); font-size: 24px; font-variant-numeric: tabular-nums; text-align: center; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(242, 239, 233, 0.16); border-radius: 12px; transition: border-color 160ms ease-out, background-color 160ms ease-out; } .ds-otp-field:hover { border-color: rgba(242, 239, 233, 0.16); } .ds-otp-field:focus-visible, .ds-otp-field.ds-filled { background: rgba(232, 173, 135, 0.07); border-color: rgba(232, 173, 135, 0.62); outline: 3px solid var(--focus); outline-offset: 4px; } .ds-otp-field:active { border-color: rgba(232, 173, 135, 0.62); } .ds-otp-field:disabled { cursor: not-allowed; opacity: 0.52; }"
+    },
+    {
+      "name": "Sharing Status Pill",
+      "kind": "chip",
+      "refersTo": "map-status-pill",
+      "description": "文本与圆点共同表达共享中或已停止，颜色不是唯一状态信号。",
+      "html": "<p class=\"ds-status-pill\"><span class=\"ds-status-dot\" aria-hidden=\"true\"></span><span>共享中</span></p>",
+      "css": ".ds-status-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; margin: 0; padding: 6px 12px; border: 1px solid rgba(242, 239, 233, 0.18); border-radius: 999px; color: var(--ink); font-size: 0.875rem; font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--anchor); } .ds-status-pill.ds-stopped { color: var(--muted); } .ds-status-pill.ds-stopped .ds-status-dot { background: var(--muted); }"
+    },
+    {
+      "name": "Quiet Map State",
+      "kind": "card",
+      "description": "贴在地图左下角的过期位置提示，不遮挡主要地图内容。",
+      "html": "<aside class=\"ds-map-state-quiet\" role=\"status\"><p>这是最后已知位置，可能已经过期。</p></aside>",
+      "css": ".ds-map-state-quiet { padding: 10px 12px; color: var(--ink); text-align: left; background: rgba(12, 22, 34, 0.78); border-radius: 10px; } .ds-map-state-quiet p { max-width: none; margin: 0; font-size: 1rem; line-height: 1.6; }"
+    },
+    {
+      "name": "Retry Map Button",
+      "kind": "button",
+      "refersTo": "retry-button",
+      "description": "地图错误状态中的唯一实心任务按钮。",
+      "html": "<button class=\"ds-retry-map\" type=\"button\">重试地图</button>",
+      "css": ".ds-retry-map { min-width: 112px; min-height: 44px; padding: 10px 18px; border: 0; border-radius: 12px; color: var(--night-3); background: var(--anchor); font-weight: 700; cursor: pointer; } .ds-retry-map:hover { background: #f0bf9e; } .ds-retry-map:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; } .ds-retry-map:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Location Marker",
+      "kind": "custom",
+      "description": "将首页锚点语义延续到地图的暖色位置标记。",
+      "html": "<span class=\"ds-pin-wrap\" aria-hidden=\"true\"><span class=\"ds-pin-core\"></span></span>",
+      "css": ".ds-pin-wrap { position: relative; display: block; width: 22px; height: 22px; } .ds-pin-wrap::before { position: absolute; inset: 0; border-radius: 50%; background: rgba(232, 173, 135, 0.55); content: \"\"; animation: ds-pin-pulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite; } .ds-pin-core { position: absolute; inset: 4px; border: 2px solid var(--ink); border-radius: 50%; background: var(--anchor); box-shadow: 0 4px 14px rgba(12, 22, 34, 0.48); } .ds-pin-wrap.ds-stopped::before { opacity: 0; animation: none; } .ds-pin-wrap.ds-stopped .ds-pin-core { background: var(--muted); } @keyframes ds-pin-pulse { 0% { opacity: 0.9; transform: scale(0.55); } 100% { opacity: 0; transform: scale(2.35); } } @media (prefers-reduced-motion: reduce) { .ds-pin-wrap::before { opacity: 0; animation: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "星野坐标",
+    "overview": "这不是一片用来制造浪漫奇观的星空，而是夜色中一个持续存在的坐标。深海军蓝让页面暗而不压抑，暖色锚点提供温度但不甜腻；界面把选择权留给访客，以低密度、长留白和明确路径表达自由、真诚与克制。\n\n视觉世界从首屏方向契约向外延伸：稀疏 CSS 星点与细轨迹属于背景材料，米白文字承担内容，蓝灰文字退后，暖色坐标只标记位置、焦点、成功和少量主要动作。组件不组成玻璃卡片阵列，也不通过厚重紫色、爱心、复合暗示、霓虹、银河照片或高密闪烁来争夺注意力。",
+    "keyCharacteristics": [
+      "深海军蓝夜色中的单一暖色坐标",
+      "移动优先、窄阅读宽度与有意留白",
+      "文字、细线和色调层级替代卡片堆叠",
+      "原生语义控件、清晰焦点和可降级动效",
+      "refined and restrained（精致且克制）的组件表达"
+    ],
+    "rules": [
+      {
+        "name": "The One Coordinate Rule",
+        "body": "暖色坐标只承担位置、焦点、成功和少量主要动作；同一视口不制造第二个同等级亮点。",
+        "section": "colors"
+      },
+      {
+        "name": "The Night, Not Neon Rule",
+        "body": "夜色靠海军蓝层次和米白对比成立，不引入纯黑、大面积紫色、霓虹蓝或照片式银河。",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "宋体只用于信件正文；导航、动作、密码、状态和地图一律使用无衬线字体。",
+        "section": "typography"
+      },
+      {
+        "name": "The Space Before Chrome Rule",
+        "body": "用留白、阅读宽度和对齐建立层级；不要为每段内容增加容器、标题条或卡片边框。",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-by-Default Rule",
+        "body": "所有普通表面静止时保持平面；阴影必须说明坐标、地图主体或当前位置的状态关系。",
+        "section": "elevation"
+      },
+      {
+        "name": "The Curve Has a Job Rule",
+        "body": "圆与圆角必须表达坐标、状态、输入或地图边界；不要把每一段内容包成圆角卡片。",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do 让暖色坐标保持稀缺，并把它用于位置、焦点、成功和主要路径。",
+      "Do 用窄阅读栏、长留白、细线和色调层级维持安静节奏。",
+      "Do 保持原生语义控件、至少 `44px` 触控目标、清晰焦点与减少动态效果路径。",
+      "Do 让地图继续占据页面主体，并为等待、停止、过期和错误提供材料状态。"
+    ],
+    "donts": [
+      "Don't 使用厚重紫色、爱心、复合暗示或任何要求回应的视觉压力。",
+      "Don't 使用霓虹、银河照片、流星雨、高密星点或持续高频闪烁。",
+      "Don't 把内容组织成玻璃卡片阵列，或给普通表面添加无意义阴影。",
+      "Don't 让装饰与暖色坐标竞争，也不要只用颜色表达共享或错误状态。"
+    ]
+  }
+}

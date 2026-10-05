@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1622">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>一个新的锚点</title>
+  <link rel="stylesheet" href="/static/theme.css">
+  <link rel="stylesheet" href="/static/experience.css">
+</head>
+<body>
+  <!--
+    THESIS: A calm personal anchor offers two voluntary paths and refuses card-based romantic spectacle.
+    OWN-WORLD: Deep navy night, soft ivory text, muted blue-gray, one #E8AD87 warm coordinate; sparse CSS stars, fine rules, native controls.
+    STORY: 访客 chooses letter or location, reads without pressure, unlocks one-way location, and arrives at the map.
+    FIRST VIEWPORT: “一个新的锚点” sits above a centered orbit/anchor with two full-width text actions below; the letter is primary on first visit.
+    FORM: Spatial index, seed key starfield-coordinate.
+    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
+  -->
+  <div class="star-field" aria-hidden="true"></div>
+
+  <main class="experience-shell" id="experience-shell">
+    <section class="experience-view entry-view" id="view-entry" aria-labelledby="entry-title">
+      <div class="entry-context">
+        <h1 id="entry-title">一个新的锚点</h1>
+        <span class="anchor-point" aria-hidden="true"></span>
+      </div>
+
+      <div class="entry-actions" aria-label="选择入口">
+        <button id="open-letter" type="button" data-priority="primary">
+          <span data-copy="letter-title">读一封信</span>
+          <small data-copy="letter-description">有几句话，想安静地留在这里。</small>
+        </button>
+        <button id="open-location" type="button">
+          <span data-copy="location-title">查看位置</span>
+          <small data-copy="location-description">直接看看我现在在哪里。</small>
+        </button>
+      </div>
+    </section>
+
+    <article class="experience-view letter-view" id="view-letter" aria-labelledby="letter-title" data-letter-mode="full" hidden>
+      <header class="view-header">
+        <button class="back-button" id="letter-back" type="button">返回</button>
+        <h1 id="letter-title">一封信</h1>
+      </header>
+      <div class="letter-copy" id="letter-copy">
+        <div id="letter-opening">
+          <p>你好，这是一封示例信。</p>
+          <p>欢迎来到这个新的锚点。</p>
+        </div>
+        <div id="letter-body" aria-label="信件正文">
+          <p>这里是一段示例正文。你可以把它替换成任何想写给访客的内容。</p>
+          <p>正文内容统一放在 static/content.js 里配置，改完刷新页面即可生效。</p>
+          <p>这一页只在访客主动输入访问码之后才会展示位置。</p>
+          <p>示例段落：这里可以放第二段正文。</p>
+          <p>示例段落：这里可以放第三段正文。</p>
+          <p>示例段落：这里可以放第四段正文。</p>
+          <p>示例段落：这里可以放第五段正文。</p>
+          <p>示例段落：这里可以放最后一段正文。</p>
+        </div>
+        <div class="letter-playback-controls" aria-label="信件播放控制">
+          <button id="letter-pause" type="button">暂停</button>
+          <button id="letter-full" type="button">阅读全文</button>
+        </div>
+        <div id="letter-closing">
+          <p>这里只会展示站主的位置，不会获取访客的定位，所以站主看不到你在哪里。</p>
+          <p>访客打开这个页面时，站主不会收到任何通知。</p>
+          <p>这个站点主要用于演示单向位置分享。</p>
+        </div>
+      </div>
+      <button class="continue-button" id="letter-continue" type="button">继续前往位置</button>
+    </article>
+
+    <section class="experience-view transition-view" id="view-transition" aria-label="正在前往位置" hidden>
+      <div id="transition-copy"></div>
+      <span class="traveling-anchor" aria-hidden="true"></span>
+    </section>
+
+    <section class="experience-view password-view" id="view-password" aria-labelledby="password-title" hidden>
+      <button class="back-button" id="password-back" type="button">返回</button>
+      <div class="password-content">
+        <h1 id="password-title">查看位置</h1>
+        <p id="password-hint">访问码是 6 位数字，请向站主索取。</p>
+        <div class="otp" id="otp" role="group" aria-label="六位访问码">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="访问码第 1 位">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="访问码第 2 位">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="访问码第 3 位">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="访问码第 4 位">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="访问码第 5 位">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="访问码第 6 位">
+        </div>
+        <p id="password-feedback" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <noscript>
+      <article class="letter-view" aria-labelledby="noscript-letter-title">
+        <header class="view-header">
+          <h1 id="noscript-letter-title">一封信</h1>
+        </header>
+        <div class="letter-copy">
+          <div>
+            <p>你好，这是一封示例信。</p>
+            <p>欢迎来到这个新的锚点。</p>
+          </div>
+          <div>
+            <p>这里是一段示例正文。你可以把它替换成任何想写给访客的内容。</p>
+            <p>正文内容统一放在 static/content.js 里配置，改完刷新页面即可生效。</p>
+            <p>这一页只在访客主动输入访问码之后才会展示位置。</p>
+            <p>示例段落：这里可以放第二段正文。</p>
+            <p>示例段落：这里可以放第三段正文。</p>
+            <p>示例段落：这里可以放第四段正文。</p>
+            <p>示例段落：这里可以放第五段正文。</p>
+            <p>示例段落：这里可以放最后一段正文。</p>
+          </div>
+          <div>
+            <p>这里只会展示站主的位置，不会获取访客的定位，所以站主看不到你在哪里。</p>
+            <p>访客打开这个页面时，站主不会收到任何通知。</p>
+            <p>这个站点主要用于演示单向位置分享。</p>
+          </div>
+        </div>
+        <p class="noscript-note">查看位置需要启用 JavaScript。</p>
+      </article>
+    </noscript>
+  </main>
+
+  <script src="/static/content.js"></script>
+  <script src="/static/experience-core.js"></script>
+  <script src="/static/experience.js"></script>
+</body>
+</html>
