@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
@@ -123,6 +124,19 @@ class LocAppServerTest(unittest.TestCase):
         self.assertIn("loc_auth=", cookie)
         self.assertEqual(self.request("/api/state", cookie=cookie).status, 200)
         self.assertEqual(self.request("/map", cookie=cookie).status, 200)
+
+    def test_visitor_and_owner_sessions_last_seven_days(self):
+        visitor = self.request("/api/login", "POST", {"code": "654321"})
+        self.assertIn("Max-Age=604800", visitor.headers["Set-Cookie"])
+        owner = self.request("/api/owner_login", "POST", {"pass": "owner-test"})
+        self.assertIn("Max-Age=604800", owner.headers["Set-Cookie"])
+
+        payload = visitor.headers["Set-Cookie"].split("loc_auth=", 1)[1].split(";", 1)[0].split(".", 1)[0]
+        role, expiry = payload.split("|")
+        self.assertEqual(role, "friend")
+        remaining = int(expiry) - int(time.time())
+        self.assertGreater(remaining, int(6.9 * 24 * 3600))
+        self.assertLess(remaining, int(7.1 * 24 * 3600))
 
     def test_five_failures_activate_rate_limit(self):
         for _ in range(5):

@@ -30,6 +30,9 @@ VIDEO_TYPES = {
 FRIEND_CODE = os.environ.get("FRIEND_CODE", "123456")
 OWNER_PASS = os.environ.get("OWNER_PASS", "owner123")
 
+# 登录有效期：7 天（超过后需要重新输入访问码）
+SESSION_SECONDS = 7 * 24 * 3600
+
 
 def parse_trusted_proxy_cidrs(raw):
     networks = []
@@ -63,7 +66,7 @@ def sign(value):
 
 
 def make_cookie(role):
-    payload = role + "|" + str(int(time.time()) + 30 * 24 * 3600)
+    payload = role + "|" + str(int(time.time()) + SESSION_SECONDS)
     return payload + "." + sign(payload)
 
 
@@ -435,7 +438,8 @@ class Handler(BaseHTTPRequestHandler):
             if outcome == "success":
                 self._json(200, {"ok": True},
                            headers={"Set-Cookie": "loc_auth=" + make_cookie("friend") +
-                                                   "; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax"})
+                                                   "; Max-Age=" + str(SESSION_SECONDS) +
+                                                   "; Path=/; HttpOnly; SameSite=Lax"})
             elif outcome == "locked":
                 self._json(429, {"ok": False, "error": "尝试次数过多，请稍后再试", "retry": retry})
             else:
@@ -445,7 +449,8 @@ class Handler(BaseHTTPRequestHandler):
             if outcome == "success":
                 self._json(200, {"ok": True},
                            headers={"Set-Cookie": "loc_auth=" + make_cookie("owner") +
-                                                   "; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax"})
+                                                   "; Max-Age=" + str(SESSION_SECONDS) +
+                                                   "; Path=/; HttpOnly; SameSite=Lax"})
             elif outcome == "locked":
                 self._json(429, {"ok": False, "error": "尝试次数过多，请稍后再试", "retry": retry})
             else:

@@ -50,7 +50,7 @@
 ## 2. 登录与会话（最容易做错的地方）
 
 - **绝对不要在前端判断访问码**。必须调用 `POST /api/login`，由服务器验证并下发 Cookie。
-- Cookie 名为 `loc_auth`，属性 `HttpOnly; SameSite=Lax; Path=/`，有效期 30 天；角色为 `friend` 或 `owner`。
+- Cookie 名为 `loc_auth`，属性 `HttpOnly; SameSite=Lax; Path=/`，**有效期 7 天**；角色为 `friend` 或 `owner`。
 - 前端请求同源接口时**默认会带 Cookie**；用 `fetch` 时不要设成 `credentials: "omit"`。
 - 限流规则：**同一 IP 对同一 realm 连续 5 次失败 → 锁 60 秒**，返回 `429` 并给 `retry` 秒数。
 - ⚠️ **已知问题（建议修复）**：线上 systemd 里没有设置 `LOCAPP_TRUSTED_PROXY_CIDRS`，导致 `app.py` 只看到 nginx 的 `127.0.0.1`，于是**所有访客共用一个限流桶**（任何人连续输错 5 次，会锁住所有人 60 秒）。修复方式：在 `/etc/systemd/system/locapp.service` 增加
