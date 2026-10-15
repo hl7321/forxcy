@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4845F">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>原型 A · 潮玩大轮播</title>
+<!-- 原型说明：皮肤来自 personal-homepage-skill 的 TOONHUB 风格（饱和色 + 大轮播 + 650ms 节奏）。
+     功能接真实接口（访问码登录、位置、影像），仅本地预览，未部署。 -->
+<style>
+  :root {
+    --ink: #14100e;
+    --panel: #fff7e9;
+    --display: "Impact", "Haettenschweiler", "Arial Narrow", "PingFang SC", sans-serif;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --shift: 650ms;
+    --bg: #F4845F;
+    --stage-bg: #fff7e9;
+  }
+  * { box-sizing: border-box; }
+  /* 必须显式声明：否则下面的 .anchor-panel { display: grid } 会盖掉浏览器默认的 [hidden] 规则，
+     导致遮罩层一直显示并吞掉所有点击 */
+  [hidden] { display: none !important; }
+  html {
+    height: 100%;
+    background: var(--bg);
+    transition: background var(--shift) cubic-bezier(.22,.61,.36,1);
+  }
+  body {
+    margin: 0;
+    height: 100%;
+    color: var(--ink);
+    font-family: var(--sans);
+    background: transparent;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .backdrop {
+    position: fixed; inset: 0; z-index: 0;
+    background: var(--bg);
+    transition: background var(--shift) cubic-bezier(.22,.61,.36,1);
+  }
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: .2;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  }
+  .stage { position: relative; z-index: 1; height: 100dvh; padding: 22px clamp(18px, 5vw, 44px); display: flex; flex-direction: column; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; z-index: 2; }
+  .brand { font-family: var(--display); font-size: clamp(22px, 5vw, 34px); font-weight: 900; letter-spacing: -0.04em; }
+  .brand small { display: block; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: .22em; opacity: .55; }
+  .hint { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .5; }
+
+  .ghost {
+    position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%);
+    font-family: var(--display); font-size: clamp(96px, 26vw, 260px); font-weight: 900; line-height: .8;
+    letter-spacing: -0.05em; color: #fff; opacity: .22; white-space: nowrap; pointer-events: none;
+    transition: opacity var(--shift) ease, transform var(--shift) cubic-bezier(.22,.61,.36,1);
+  }
+
+  .carousel { position: relative; flex: 1; margin-top: clamp(10px, 3vh, 26px); }
+  .figure {
+    position: absolute; left: 50%; top: 50%; width: clamp(180px, 42vw, 300px); height: clamp(240px, 56vw, 380px);
+    border-radius: 44px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between;
+    transform: translate(-50%, -50%);
+    transition: transform var(--shift) cubic-bezier(.22,.61,.36,1), opacity var(--shift) ease, filter var(--shift) ease;
+    box-shadow: 0 26px 42px rgba(0,0,0,.22);
+    cursor: pointer; border: 0; text-align: left; font: inherit; color: inherit;
+    background: linear-gradient(180deg, #fffaf1, var(--stage-bg));
+  }
+  .figure[data-role="center"] { z-index: 2; transform: translate(-50%, -50%) scale(1); }
+  .figure[data-role="left"] {
+    z-index: 1; transform: translate(calc(-50% - clamp(120px, 26vw, 210px)), -50%) rotate(-7deg) scale(.78);
+    opacity: .78; filter: blur(1px);
+  }
+  .figure[data-role="right"] {
+    z-index: 1; transform: translate(calc(-50% + clamp(120px, 26vw, 210px)), -50%) rotate(7deg) scale(.78);
+    opacity: .78; filter: blur(1px);
+  }
+  .figure[data-role="back"] { transform: translate(-50%, calc(-50% + 14px)) scale(.6); opacity: 0; pointer-events: none; }
+  .figure .glyph {
+    width: 74px; height: 74px; border-radius: 24px; display: grid; place-items: center;
+    font-family: var(--display); font-size: 30px; font-weight: 900; color: #fff; letter-spacing: -0.03em;
+    background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,.18));
+    border: 2px solid rgba(20,16,14,.85);
+  }
+  .figure h2 { margin: 0; font-size: clamp(20px, 4.6vw, 28px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; }
+  .figure p { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: rgba(20,16,14,.62); }
+  .figure .tag {
+    align-self: flex-start; font-family: var(--display); font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 999px; background: rgba(20,16,14,.9); color: #fff;
+  }
+
+  .bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; z-index: 2; }
+  .copy { max-width: 62%; }
+  .copy h1 { margin: 0; font-size: clamp(26px, 7vw, 46px); font-weight: 900; letter-spacing: -0.045em; line-height: .98; }
+  .copy p { margin: 10px 0 0; font-size: 14px; line-height: 1.55; color: rgba(20,16,14,.68); }
+  .actions { display: flex; align-items: center; gap: 14px; }
+  .nav-btn {
+    width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(20,16,14,.85); background: transparent;
+    font-size: 19px; cursor: pointer; transition: transform 180ms ease, background 180ms ease;
+  }
+  .nav-btn:hover { transform: translateY(-2px); background: rgba(255,255,255,.35); }
+  .counter { font-size: 13px; font-weight: 700; letter-spacing: .08em; }
+  .cta {
+    border: 0; border-radius: 999px; padding: 15px 26px; font-size: 14px; font-weight: 900; letter-spacing: .14em;
+    text-transform: uppercase; background: #14100e; color: #fff; cursor: pointer;
+    transition: transform 200ms cubic-bezier(.22,.61,.36,1), box-shadow 200ms ease;
+  }
+  .cta:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 14px 26px rgba(0,0,0,.28); }
+
+  /* 面板（验证码 / 信件 / 影像）——共用结构，这里换成本风格的皮 */
+  .anchor-panel {
+    position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; padding: 20px;
+    background: rgba(20,16,14,.55); backdrop-filter: blur(6px);
+  }
+  .anchor-panel .panel-card {
+    position: relative; width: min(560px, 100%); max-height: 86dvh; overflow: auto; padding: 30px 26px 28px;
+    border-radius: 30px; background: var(--panel); color: var(--ink); box-shadow: 0 30px 60px rgba(0,0,0,.35);
+  }
+  .anchor-panel .panel-close {
+    position: fixed; z-index: 3;
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    width: 54px; height: 54px; border-radius: 50%;
+    border: 2px solid rgba(20,16,14,.85); background: var(--panel); color: var(--ink);
+    font-size: 24px; line-height: 1; cursor: pointer;
+    box-shadow: 0 12px 26px rgba(0,0,0,.28);
+    transition: transform 160ms ease, background 160ms ease;
+  }
+  .anchor-panel .panel-close:hover { transform: scale(1.06); background: #fff; }
+  .anchor-panel .panel-close:active { transform: scale(.95); }
+  .panel-dismiss-hint {
+    position: fixed; left: 50%; transform: translateX(-50%); z-index: 3;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    margin: 0; font-size: 12px; letter-spacing: .08em; color: rgba(255,255,255,.75);
+    pointer-events: none;
+  }
+  @media (max-width: 620px) {
+    .anchor-panel .panel-card { padding-top: 62px; }
+  }
+  .panel-kicker { margin: 0 0 6px; font-family: var(--display); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; opacity: .6; }
+  .panel-title { margin: 0 0 8px; font-size: 24px; font-weight: 900; letter-spacing: -0.03em; }
+  .panel-hint { margin: 0 0 18px; font-size: 14px; line-height: 1.6; color: rgba(20,16,14,.62); }
+  .panel-otp { display: flex; gap: 10px; justify-content: space-between; margin-bottom: 14px; }
+  .panel-otp input {
+    width: 100%; min-width: 0; height: 62px; border-radius: 16px; border: 2px solid rgba(20,16,14,.75);
+    background: #fff; text-align: center; font-size: 26px; font-weight: 900; color: var(--ink);
+  }
+  .panel-feedback { min-height: 22px; margin: 0; font-size: 14px; font-weight: 700; }
+  .panel-facts { display: grid; gap: 10px; margin: 0 0 16px; }
+  .panel-facts div { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+                     padding-block-end: 10px; border-bottom: 1px solid rgba(20,16,14,.14); }
+  .panel-facts dt { font-size: 13px; color: rgba(20,16,14,.55); }
+  .panel-facts dd { margin: 0; font-size: 15px; font-weight: 800; }
+  .panel-cta { width: 100%; margin-top: 6px; border: 0; border-radius: 999px; padding: 15px 22px;
+               background: #14100e; color: #fff; font-size: 14px; font-weight: 900; letter-spacing: .06em; cursor: pointer; }
+  .panel-letter p { margin: 0 0 16px; font-size: 16px; line-height: 1.9; }
+  .panel-card--videos { width: min(480px, 100%); }
+  .panel-video-stage { border-radius: 22px; overflow: hidden; background: #14100e; }
+  .panel-video-stage video { display: block; width: 100%; aspect-ratio: 9 / 16; object-fit: contain; background: #14100e; }
+  .panel-caption { margin: 14px 0 0; font-size: 15px; font-weight: 800; }
+  .panel-video-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 12px; }
+  .panel-video-nav button {
+    width: 46px; height: 46px; border-radius: 50%; border: 2px solid rgba(20,16,14,.8); background: transparent;
+    font-size: 17px; cursor: pointer;
+  }
+  .panel-video-nav span { font-size: 13px; font-weight: 700; letter-spacing: .08em; }
+  .proto-badge {
+    position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 5;
+    font-size: 11px; letter-spacing: .08em; color: rgba(20,16,14,.45);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  }
+  @media (max-width: 560px) {
+    .hint { display: none; }
+    .bottom { flex-direction: column; align-items: stretch; }
+    .copy { max-width: 100%; }
+    .actions { justify-content: space-between; }
+  }
+</style>
+</head>
+<body>
+  <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <main class="stage">
+    <header>
+      <div class="brand" id="brand">一个新的锚点<small>ANCHOR · PROTOTYPE A</small></div>
+      <span class="hint">左右切换 · 点中间进入</span>
+    </header>
+
+    <div class="ghost" id="ghost" aria-hidden="true">LETTER</div>
+
+    <div class="carousel" id="carousel"></div>
+
+    <div class="bottom">
+      <div class="copy">
+        <h1 id="copy-title">读一封信</h1>
+        <p id="copy-desc"></p>
+      </div>
+      <div class="actions">
+        <button class="nav-btn" id="prev" type="button" aria-label="上一个入口">←</button>
+        <span class="counter" id="counter">1 / 3</span>
+        <button class="nav-btn" id="next" type="button" aria-label="下一个入口">→</button>
+        <button class="cta" id="enter" type="button">进入</button>
+      </div>
+    </div>
+  </main>
+  <div class="proto-badge">原型 A · 潮玩大轮播（本地预览，未部署）</div>
+  <div class="anchor-panel" id="panel" hidden></div>
+
+  <script src="/static/content.js"></script>
+  <script src="/static/anchor-core.js"></script>
+  <script>
+  (() => {
+    "use strict";
+    const core = window.AnchorCore;
+    const items = core.entries();
+    const descs = items.map(item => item.desc);
+    const palettes = [
+      { bg: "#F4845F", stage: "#fff7e9", glyph: "信" },
+      { bg: "#6BBF7A", stage: "#f4fff2", glyph: "位" },
+      { bg: "#E882B4", stage: "#fff4f9", glyph: "影" },
+    ];
+    let index = 0;
+    let locked = false;
+
+    const carousel = document.getElementById("carousel");
+    const ghost = document.getElementById("ghost");
+    const figures = items.map((item, position) => {
+      const node = document.createElement("button");
+      node.type = "button";
+      node.className = "figure";
+      node.innerHTML = `
+        <span class="glyph">${palettes[position].glyph}</span>
+        <span>
+          <span class="tag">${item.brand}</span>
+          <h2>${item.title}</h2>
+          <p>${item.desc}</p>
+        </span>`;
+      node.addEventListener("click", () => {
+        const direction = core.cardStep(node.dataset.role);
+        if (direction === 0) enter();
+        else step(direction);
+      });
+      carousel.appendChild(node);
+      return node;
+    });
+
+    const panel = core.createPanel(document.getElementById("panel"), {
+      gateTitle: () => "输入访问码",
+      onLocation: () => window.location.assign("/map"),
+    });
+
+    function role(position) {
+      const total = figures.length;
+      const diff = (position - index + total) % total;
+      return diff === 0 ? "center" : diff === 1 ? "right" : "left";
+    }
+
+    function render(direction) {
+      document.documentElement.style.background = palettes[index].bg;
+      const backdrop = document.getElementById("backdrop");
+      if (backdrop) backdrop.style.background = palettes[index].bg;
+      document.body.style.background = "transparent";
+      document.documentElement.style.setProperty("--stage-bg", palettes[index].stage);
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", palettes[index].bg);
+      figures.forEach((node, position) => {
+        node.dataset.role = role(position);
+        node.querySelector(".glyph").style.backgroundImage =
+          `linear-gradient(180deg, rgba(255,255,255,.4), ${palettes[position].bg})`;
+      });
+      const active = items[index];
+      ghost.textContent = active.brand;
+      document.getElementById("copy-title").textContent = active.title;
+      document.getElementById("copy-desc").textContent = descs[index];
+      document.getElementById("counter").textContent = `${index + 1} / ${items.length}`;
+      if (direction && typeof document.body.animate === "function") {
+        document.getElementById("copy-title").animate(
+          [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }],
+          { duration: 380, easing: "cubic-bezier(.22,.61,.36,1)" },
+        );
+      }
+    }
+
+    function step(delta) {
+      if (locked) return;
+      locked = true;
+      index = ((index + delta) % items.length + items.length) % items.length;
+      render(delta);
+      setTimeout(() => { locked = false; }, 650);
+    }
+
+    function enter() {
+      panel.activate(items[index].key);
+    }
+
+    document.getElementById("prev").addEventListener("click", () => step(-1));
+    document.getElementById("next").addEventListener("click", () => step(1));
+    document.getElementById("enter").addEventListener("click", enter);
+    window.addEventListener("keydown", event => {
+      if (event.key === "ArrowLeft") step(-1);
+      if (event.key === "ArrowRight") step(1);
+    });
+    let touchX = null;
+    carousel.addEventListener("touchstart", event => {
+      touchX = event.changedTouches[0].clientX;
+    }, { passive: true });
+    carousel.addEventListener("touchend", event => {
+      if (touchX === null) return;
+      const delta = event.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(delta) > 40) step(delta < 0 ? 1 : -1);
+    });
+
+    document.getElementById("brand").firstChild.textContent =
+      (window.LOCAPP_CONTENT && window.LOCAPP_CONTENT.entry && window.LOCAPP_CONTENT.entry.greeting) || "一个新的锚点";
+    render(0);
+
+    /* 首屏填入真实内容：信件开头、位置更新时间、影像条数 */
+    (async () => {
+      const data = await core.preview();
+      descs[0] = data.letterLine ? `正文开头：${data.letterLine}` : items[0].desc;
+      descs[1] = data.authenticated
+        ? (data.state && data.state.has_location
+            ? `最后更新 ${core.relativeTime(data.state.tst)} · 电量 ${data.state.batt}%`
+            : "暂时还没有位置")
+        : "需要访问码";
+      descs[2] = data.authenticated ? `${(data.videos || []).length} 条影像` : "需要访问码";
+      figures.forEach((node, position) => { node.querySelector("p").textContent = descs[position]; });
+      document.getElementById("copy-desc").textContent = descs[index];
+      document.querySelector(".hint").textContent = data.authenticated
+        ? "已登录 · 左右切换 · 点中间进入"
+        : "未登录 · 进入需要访问码";
+    })();
+  })();
+  </script>
+</body>
+</html>

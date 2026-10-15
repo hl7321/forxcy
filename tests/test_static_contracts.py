@@ -10,17 +10,21 @@ class StaticContractTest(unittest.TestCase):
     def read(self, relative):
         return (ROOT / relative).read_text(encoding="utf-8")
 
-    def test_entry_has_four_named_views_and_native_controls(self):
+    def test_entry_has_five_named_views_and_native_controls(self):
         html = self.read("static/index.html")
-        for view_id in ("view-entry", "view-letter", "view-transition", "view-password"):
+        for view_id in ("view-entry", "view-letter", "view-videos", "view-transition", "view-password"):
             self.assertIn(f'id="{view_id}"', html)
         for control_id in (
             "open-letter",
             "open-location",
+            "open-videos",
             "letter-back",
             "letter-pause",
             "letter-full",
             "letter-continue",
+            "videos-back",
+            "video-prev",
+            "video-next",
             "password-back",
         ):
             self.assertRegex(html, rf'<(?:button|a)[^>]+id="{control_id}"')
@@ -86,6 +90,115 @@ class StaticContractTest(unittest.TestCase):
         self.assertNotRegex(script, re.compile(r"analytics|telemetry|beacon", re.I))
         self.assertIn('fetchWithTimeout("/api/login"', script)
         self.assertIn('fetchWithTimeout("/api/state"', script)
+
+    def test_videos_view_is_server_managed_and_uses_native_playback(self):
+        html = self.read("static/index.html")
+        content = self.read("static/content.js")
+        script = self.read("static/experience.js")
+        self.assertIn('data-copy="videos-title"', html)
+        self.assertIn('data-copy="videos-description"', html)
+        self.assertIn('id="video-list"', html)
+        self.assertIn('id="videos-feedback" aria-live="polite"', html)
+        self.assertIn("videosTitle", content)
+        self.assertIn("videosDescription", content)
+        self.assertIn('fetchWithTimeout("/api/videos"', script)
+        self.assertIn('player.preload = "metadata"', script)
+        self.assertIn("player.playsInline = true", script)
+        self.assertIn('player.setAttribute("playsinline", "")', script)
+        self.assertIn('id="video-stage"', html)
+        self.assertIn('id="video-counter" aria-live="polite"', html)
+        self.assertIn("videoSwitchMotion", script)
+        self.assertIn('"touchend"', script)
+        self.assertIn("ArrowLeft", script)
+        css = self.read("static/experience.css")
+        self.assertRegex(
+            css,
+            re.compile(r"\.video-card video\s*\{[^}]*aspect-ratio:\s*9\s*/\s*16\s*;", re.S),
+        )
+        self.assertRegex(
+            css,
+            re.compile(r"\.video-card\s*\{[^}]*grid-area:\s*1\s*/\s*1\s*;", re.S),
+        )
+        self.assertNotIn("autoplay", html.lower())
+        self.assertNotRegex(script, re.compile(r"autoplay", re.I))
+
+    def test_new_homepage_keeps_the_agreed_contract(self):
+        html = self.read("static/home.html")
+        css = self.read("static/home.css")
+        script = self.read("static/home.js")
+        core = self.read("static/anchor-core.js")
+
+        # 标题与隐私
+        self.assertIn("<title>欢迎你，访客</title>", html)
+        self.assertIn('name="robots" content="noindex,nofollow,noarchive"', html)
+
+        # 三个入口 + 面板结构
+        self.assertIn('id="carousel"', html)
+        self.assertIn('id="panel"', html)
+        self.assertIn("core.entries()", script)
+        self.assertIn("createPanel", script)
+
+        # 信公开、无 JS 也能看
+        self.assertIn("<noscript>", html)
+        self.assertIn("你好，这是一封示例信。", html)
+        self.assertIn("查看位置和影像需要启用 JavaScript", html)
+
+        # 位置与影像在面板内完成（不跳新页面）
+        self.assertIn("onLocation: () => window.location.assign(\"/map\")", script)
+        self.assertIn("panel.activate(items[index].key)", script)
+
+        # 左右切换：按钮 + 滑动 + 键盘
+        self.assertIn("id=\"prev\"", html)
+        self.assertIn("id=\"next\"", html)
+        self.assertIn('"touchstart"', script)
+        self.assertIn("ArrowLeft", script)
+        self.assertIn("650", css)
+
+        # 视频不允许下载、不自动播放
+        self.assertIn('controlslist", "nodownload noplaybackrate"', core)
+        self.assertIn("disablePictureInPicture", core)
+        self.assertIn('class="panel-video-note"', core)
+        self.assertIn("video.caption", core)
+        self.assertRegex(css, re.compile(r"\.panel-video-note\s*\{[^}]*padding", re.S))
+        self.assertNotIn("autoplay", html.lower())
+
+        # 无外部依赖、无统计、遮罩不会挡住页面
+        self.assertNotRegex(html, re.compile(r'<(?:script|link)[^>]+(?:src|href)="https?://', re.I))
+        # 只允许内联 data: 资源；不允许真正的外链（url("data:...") 里可能出现 xmlns 的 http://，所以锚定到 url( 之后）
+        self.assertNotRegex(css, re.compile(r"@import|url\(\s*['\"]?\s*https?://", re.I))
+        self.assertNotRegex(html, re.compile(r"analytics|telemetry|beacon|navigator\.geolocation", re.I))
+        self.assertIn("[hidden] { display: none !important; }", css)
+        self.assertIn("prefers-reduced-motion", css)
+
+    def test_videos_open_a_full_screen_depth_carousel(self):
+        html = self.read("static/home.html")
+        css = self.read("static/home.css")
+        script = self.read("static/home.js")
+        # 整屏影像页（不是弹窗）
+        self.assertIn('id="view-videos"', html)
+        self.assertIn('id="videos-stage"', html)
+        self.assertIn('id="videos-note"', html)
+        self.assertIn('id="videos-back"', html)
+        self.assertIn('id="videos-counter"', html)
+        # 纵深轮播：中间大、左右小且带旋转与模糊，只显示三张
+        self.assertIn('.videos-card[data-role="center"]', css)
+        self.assertIn('.videos-card[data-role="left"]', css)
+        self.assertIn('.videos-card[data-role="right"]', css)
+        self.assertIn('.videos-card[data-role="back"]', css)
+        self.assertIn("filter: blur(", css)
+        self.assertIn("rotate(-7deg)", css)
+        self.assertIn("--drag", css)
+        self.assertIn("pointermove", script)
+        # 左右滑动（两个方向）与键盘切换
+        self.assertIn("roleForVideo", script)
+        self.assertIn("stepVideo", script)
+        self.assertIn('"touchstart"', script)
+        self.assertIn("ArrowLeft", script)
+        self.assertIn('"videos-card"', script)
+        # 影像走整屏视图（由 core 的 onVideos 回调解锁后打开）
+        self.assertIn("onVideos", script)
+        self.assertIn("openVideosView", script)
+        self.assertNotIn("autoplay", html.lower())
 
     def test_password_success_waits_for_visible_motion_before_map_navigation(self):
         script = self.read("static/experience.js")
@@ -194,7 +307,7 @@ class StaticContractTest(unittest.TestCase):
             "访客打开这个页面时，站主不会收到任何通知。",
             "这个站点主要用于演示单向位置分享。",
             "访问码是 6 位数字，请向站主索取。",
-            "查看位置需要启用 JavaScript。",
+            "查看位置和影像需要启用 JavaScript。",
         )
         for copy in confirmed:
             with self.subTest(copy=copy):
@@ -222,7 +335,7 @@ class StaticContractTest(unittest.TestCase):
             with self.subTest(paragraph=paragraph):
                 self.assertIn(paragraph, fallback)
         self.assertRegex(fallback, r"<article\b")
-        self.assertIn("查看位置需要启用 JavaScript", fallback)
+        self.assertIn("查看位置和影像需要启用 JavaScript", fallback)
         self.assertNotRegex(fallback, re.compile(r"访问码第|地址|经度|纬度", re.I))
         self.assertNotRegex(fallback, re.compile(r"<(?:script|style)\b", re.I))
 

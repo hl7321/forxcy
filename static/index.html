@@ -36,6 +36,10 @@
           <span data-copy="location-title">查看位置</span>
           <small data-copy="location-description">直接看看我现在在哪里。</small>
         </button>
+        <button id="open-videos" type="button">
+          <span data-copy="videos-title">看一些影像</span>
+          <small data-copy="videos-description">把一些画面留在这里。</small>
+        </button>
       </div>
     </section>
 
@@ -71,6 +75,23 @@
       </div>
       <button class="continue-button" id="letter-continue" type="button">继续前往位置</button>
     </article>
+
+    <section class="experience-view videos-view" id="view-videos" aria-labelledby="videos-heading" hidden>
+      <header class="view-header">
+        <button class="back-button" id="videos-back" type="button">返回</button>
+        <h1 id="videos-heading">一些影像</h1>
+      </header>
+      <p class="videos-feedback" id="videos-feedback" aria-live="polite"></p>
+      <div class="video-stage" id="video-stage">
+        <div class="video-list" id="video-list"></div>
+        <p class="video-caption" id="video-caption"></p>
+      </div>
+      <div class="video-controls" id="video-controls" hidden>
+        <button class="video-nav" id="video-prev" type="button" aria-label="上一个影像">←</button>
+        <p class="video-counter" id="video-counter" aria-live="polite"></p>
+        <button class="video-nav" id="video-next" type="button" aria-label="下一个影像">→</button>
+      </div>
+    </section>
 
     <section class="experience-view transition-view" id="view-transition" aria-label="正在前往位置" hidden>
       <div id="transition-copy"></div>
@@ -120,7 +141,7 @@
             <p>这个站点主要用于演示单向位置分享。</p>
           </div>
         </div>
-        <p class="noscript-note">查看位置需要启用 JavaScript。</p>
+        <p class="noscript-note">查看位置和影像需要启用 JavaScript。</p>
       </article>
     </noscript>
   </main>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>首页改造原型 · 两个方向</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: clamp(28px, 6vw, 64px) clamp(18px, 5vw, 48px);
+         background: #14121a; color: #f2eef8; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+  main { max-width: 860px; margin-inline: auto; }
+  h1 { margin: 0 0 12px; font-size: clamp(26px, 5vw, 38px); font-weight: 900; letter-spacing: -0.03em; }
+  p.lede { margin: 0 0 34px; font-size: 15px; line-height: 1.8; color: rgba(242,238,248,.62); }
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  a.card { display: block; padding: 26px 24px 24px; border-radius: 22px; text-decoration: none; color: inherit;
+           border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05);
+           transition: transform 220ms ease, border-color 220ms ease, background 220ms ease; }
+  a.card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.4); background: rgba(255,255,255,.09); }
+  .tag { display: inline-block; margin-bottom: 12px; padding: 3px 10px; border-radius: 999px; font-size: 12px; letter-spacing: .1em; }
+  .tag-a { background: rgba(244,132,95,.22); color: #ffb28f; }
+  .tag-b { background: rgba(92,244,255,.18); color: #8ef1ff; }
+  h2 { margin: 0 0 8px; font-size: 20px; }
+  a.card p { margin: 0; font-size: 14px; line-height: 1.65; color: rgba(242,238,248,.6); }
+  ul.notes { margin: 34px 0 0; padding-left: 20px; font-size: 14px; line-height: 1.9; color: rgba(242,238,248,.62); }
+  code { background: rgba(255,255,255,.1); padding: 1px 6px; border-radius: 5px; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>首页改造 · 两个方向原型</h1>
+    <p class="lede">两套皮肤都能真正跑通功能：点进去会走真实的访问码验证；位置会打开现有地图页；影像会列出服务器上的视频（现在是你上传的那条 clip-01）。都是本地预览，线上没动。</p>
+
+    <div class="grid">
+      <a class="card" href="/static/prototypes/toonhub/index.html">
+        <span class="tag tag-a">原型 A</span>
+        <h2>潮玩大轮播</h2>
+        <p>饱和撞色（珊瑚／草绿／粉）＋超大幽灵字＋卡片轮播，650ms 节奏切换；三个入口就是三张"公仔卡"，中间的可以点进去。</p>
+      </a>
+      <a class="card" href="/static/prototypes/gradient/index.html">
+        <span class="tag tag-b">原型 B</span>
+        <h2>动态渐变品牌</h2>
+        <p>深紫底＋粉／青／黄三色光斑缓慢流动，三张玻璃卡片依次浮入；按钮有磁吸跟随，鼠标移动时背景有轻微视差。</p>
+      </a>
+    </div>
+
+    <ul class="notes">
+      <li>访问码：和线上一致（那 6 位数字）；验证成功后 <code>位置</code> 会跳到现有地图页，<code>影像</code> 会在面板里播放视频。</li>
+      <li>信件用的是站点里真实的信（<code>/static/content.js</code>），没有另外编造文案。</li>
+      <li>两套都对"减少动态效果"做了降级，手机上也能滑动切换。</li>
+      <li>这是原型页面，路径在 <code>/static/prototypes/</code> 下，没有接进正式首页。</li>
+    </ul>
+  </main>
+</body>
+</html>

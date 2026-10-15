@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#180f2c">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>原型 B · 动态渐变品牌</title>
+<!-- 原型说明：皮肤来自 personal-homepage-skill 的 Motion Gradient 风格（深紫底 + 三色光斑 + 缓慢流动 + 磁吸按钮）。
+     功能接真实接口（访问码登录、位置、影像），仅本地预览，未部署。 -->
+<style>
+  :root {
+    --base: #180f2c;
+    --pink: #ff7ac8;
+    --cyan: #5cf4ff;
+    --yellow: #ffe15a;
+    --ink: #f4eefb;
+    --muted: rgba(244,238,251,.62);
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  /* 必须显式声明：否则 .anchor-panel { display: grid } 会盖掉 [hidden]，遮罩层会一直挡住页面 */
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; min-height: 100dvh; color: var(--ink); background: transparent;
+    font-family: var(--sans); overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+  }
+  html { background: var(--base); }
+  .backdrop { position: fixed; inset: 0; z-index: 0; background: var(--base); }
+  .mesh { position: fixed; inset: -18%; z-index: 0; pointer-events: none; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55; }
+  .blob-1 { width: 46vmax; height: 46vmax; left: -8%; top: -6%; background: var(--pink);
+            animation: drift1 34s ease-in-out infinite alternate; }
+  .blob-2 { width: 40vmax; height: 40vmax; right: -6%; top: 4%; background: var(--cyan);
+            animation: drift2 29s ease-in-out infinite alternate; }
+  .blob-3 { width: 38vmax; height: 38vmax; left: 24%; bottom: -14%; background: var(--yellow);
+            animation: drift3 38s ease-in-out infinite alternate; opacity: .42; }
+  @keyframes drift1 { to { transform: translate3d(6%, 8%, 0) scale(1.12); } }
+  @keyframes drift2 { to { transform: translate3d(-7%, 6%, 0) scale(1.08); } }
+  @keyframes drift3 { to { transform: translate3d(4%, -7%, 0) scale(1.14); } }
+  .veil { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+          background: radial-gradient(120% 90% at 50% 20%, transparent 30%, rgba(24,15,44,.78) 78%),
+                      linear-gradient(180deg, rgba(24,15,44,.35), rgba(24,15,44,.86)); }
+
+  .shell { position: relative; z-index: 2; width: min(100%, 1080px); margin-inline: auto;
+           min-height: 100dvh; padding: clamp(20px, 4vw, 40px) clamp(18px, 5vw, 48px) clamp(28px, 5vw, 56px);
+           display: flex; flex-direction: column; gap: clamp(24px, 5vh, 48px); }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px;
+          background: rgba(255,255,255,.12); font-size: 12px; font-weight: 700; letter-spacing: .06em; }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); display: inline-block; }
+  .topnav { display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
+  .topnav span { cursor: default; }
+
+  .hero { margin-top: auto; }
+  .hero h1 { margin: 0; font-size: clamp(38px, 9vw, 76px); font-weight: 900; letter-spacing: -0.045em; line-height: .96; }
+  .hero h1 em { font-style: normal; background: linear-gradient(96deg, var(--cyan), var(--pink) 55%, var(--yellow));
+                -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { margin: 18px 0 0; font-size: clamp(14px, 2.4vw, 17px); line-height: 1.7; color: var(--muted); max-width: 44ch; }
+
+  .cards { display: grid; gap: clamp(14px, 2vw, 20px); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card {
+    position: relative; text-align: left; font: inherit; color: inherit; cursor: pointer;
+    padding: 24px 22px 22px; border-radius: 26px; border: 1px solid rgba(255,255,255,.14);
+    background: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+    transition: transform 320ms cubic-bezier(.22,.61,.36,1), border-color 320ms ease, background 320ms ease;
+    opacity: 0; transform: translateY(22px) scale(.98);
+  }
+  .card.in { opacity: 1; transform: none; }
+  .card:hover { border-color: rgba(255,255,255,.34); background: linear-gradient(160deg, rgba(255,255,255,.16), rgba(255,255,255,.05)); }
+  .card .index { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+  .card h2 { margin: 14px 0 8px; font-size: clamp(20px, 3.2vw, 26px); font-weight: 800; letter-spacing: -0.03em; }
+  .card p { margin: 0 0 22px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+  .card .cta {
+    display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.06); font-size: 13px; font-weight: 700;
+    transition: transform 220ms cubic-bezier(.22,.61,.36,1), background 220ms ease, border-color 220ms ease;
+    will-change: transform;
+  }
+  .card:hover .cta { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.62); }
+  .card-1 .cta { color: var(--cyan); }
+  .card-2 .cta { color: var(--pink); }
+  .card-3 .cta { color: var(--yellow); }
+
+  .footnote { font-size: 12px; color: rgba(244,238,251,.4); letter-spacing: .06em; }
+
+  /* 面板：换成深色玻璃皮 */
+  .anchor-panel {
+    position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; padding: 20px;
+    background: rgba(12,7,24,.72); backdrop-filter: blur(10px);
+  }
+  .anchor-panel .panel-card {
+    position: relative; width: min(560px, 100%); max-height: 86dvh; overflow: auto; padding: 30px 26px 28px;
+    border-radius: 28px; color: var(--ink);
+    border: 1px solid rgba(255,255,255,.18);
+    background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+    box-shadow: 0 30px 70px rgba(0,0,0,.5);
+  }
+  .anchor-panel .panel-close {
+    position: fixed; z-index: 3;
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    width: 54px; height: 54px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.45); background: rgba(24,15,44,.92); color: var(--ink);
+    font-size: 24px; line-height: 1; cursor: pointer;
+    box-shadow: 0 12px 26px rgba(0,0,0,.45);
+    transition: transform 160ms ease, background 160ms ease;
+  }
+  .anchor-panel .panel-close:hover { transform: scale(1.06); background: rgba(255,255,255,.18); }
+  .anchor-panel .panel-close:active { transform: scale(.95); }
+  .panel-dismiss-hint {
+    position: fixed; left: 50%; transform: translateX(-50%); z-index: 3;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    margin: 0; font-size: 12px; letter-spacing: .08em; color: rgba(244,238,251,.6);
+    pointer-events: none;
+  }
+  @media (max-width: 620px) {
+    .anchor-panel .panel-card { padding-top: 62px; }
+  }
+  }
+  .panel-kicker { margin: 0 0 6px; font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+  .panel-title { margin: 0 0 8px; font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+  .panel-hint { margin: 0 0 18px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+  .panel-otp { display: flex; gap: 10px; margin-bottom: 14px; }
+  .panel-otp input {
+    width: 100%; min-width: 0; height: 62px; border-radius: 16px; text-align: center;
+    font-size: 26px; font-weight: 800; color: var(--ink);
+    border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08);
+  }
+  .panel-otp input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .panel-feedback { min-height: 22px; margin: 0; font-size: 14px; font-weight: 700; color: var(--cyan); }
+  .panel-facts { display: grid; gap: 10px; margin: 0 0 16px; }
+  .panel-facts div { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+                     padding-block-end: 10px; border-bottom: 1px solid rgba(255,255,255,.14); }
+  .panel-facts dt { font-size: 13px; color: var(--muted); }
+  .panel-facts dd { margin: 0; font-size: 15px; font-weight: 700; }
+  .panel-cta { width: 100%; margin-top: 6px; padding: 15px 22px; border-radius: 999px; cursor: pointer;
+               border: 1px solid rgba(255,255,255,.4); background: linear-gradient(96deg, rgba(92,244,255,.22), rgba(255,122,200,.22));
+               color: var(--ink); font-size: 14px; font-weight: 800; letter-spacing: .06em; }
+  .panel-letter p { margin: 0 0 16px; font-size: 16px; line-height: 1.95; color: rgba(244,238,251,.9); }
+  .panel-video-stage { border-radius: 22px; overflow: hidden; background: #0a0616; }
+  .panel-video-stage video { display: block; width: 100%; aspect-ratio: 9 / 16; object-fit: contain; background: #0a0616; }
+  .panel-caption { margin: 14px 0 0; font-size: 15px; font-weight: 700; }
+  .panel-video-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 12px; }
+  .panel-video-nav button {
+    width: 46px; height: 46px; border-radius: 50%; color: var(--ink); cursor: pointer;
+    border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.06); font-size: 17px;
+  }
+  .panel-video-nav span { font-size: 13px; letter-spacing: .08em; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    .blob { animation: none !important; }
+  }
+  @media (max-width: 620px) {
+    .topnav { display: none; }
+    .blob { filter: blur(52px); opacity: .45; }
+  }
+</style>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"></div>
+  <div class="mesh" aria-hidden="true">
+    <span class="blob blob-1" data-depth="18"></span>
+    <span class="blob blob-2" data-depth="-22"></span>
+    <span class="blob blob-3" data-depth="12"></span>
+  </div>
+  <div class="veil" aria-hidden="true"></div>
+
+  <main class="shell">
+    <div class="topbar">
+      <span class="pill"><i></i><span id="brand">一个新的锚点</span></span>
+      <nav class="topnav" aria-label="站点结构">
+        <span>信</span><span>坐标</span><span>影像</span>
+      </nav>
+    </div>
+
+    <section class="hero">
+      <h1 id="hero-title">一封信 · 一个坐标<br><em>一些影像</em></h1>
+      <p id="hero-sub"></p>
+    </section>
+
+    <section class="cards" id="cards" aria-label="三个入口"></section>
+
+    <p class="footnote">原型 B · 动态渐变品牌（本地预览，未部署）</p>
+  </main>
+
+  <div class="anchor-panel" id="panel" hidden></div>
+
+  <script src="/static/content.js"></script>
+  <script src="/static/anchor-core.js"></script>
+  <script>
+  (() => {
+    "use strict";
+    const core = window.AnchorCore;
+    const content = window.LOCAPP_CONTENT || {};
+    const items = core.entries();
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const labels = ["01 / LETTER", "02 / COORD", "03 / MOTION"];
+    const ctas = ["打开这封信", "查看现在的位置", "看一些影像"];
+
+    document.getElementById("brand").textContent = (content.entry && content.entry.greeting) || "一个新的锚点";
+    document.getElementById("hero-sub").textContent =
+      [content.entry && content.entry.letterDescription, content.entry && content.entry.locationDescription,
+       content.entry && content.entry.videosDescription].filter(Boolean).join(" 　");
+
+    const panel = core.createPanel(document.getElementById("panel"), {
+      gateTitle: () => "先输入访问码",
+      onLocation: () => window.location.assign("/map"),
+    });
+
+    /* 首屏填入真实内容：信件开头、位置更新时间、影像条数 */
+    const descs = items.map(item => item.desc);
+
+    const cards = items.map((item, position) => {
+      const node = document.createElement("button");
+      node.type = "button";
+      node.className = `card card-${position + 1}`;
+      node.innerHTML = `
+        <span class="index">${labels[position]}</span>
+        <h2>${item.title}</h2>
+        <p>${descs[position]}</p>
+        <span class="cta">${ctas[position]} <span aria-hidden="true">→</span></span>`;
+      node.addEventListener("click", () => panel.activate(item.key));
+      document.getElementById("cards").appendChild(node);
+      return node;
+    });
+
+    (async () => {
+      const data = await core.preview();
+      descs[0] = data.letterLine ? `正文开头：${data.letterLine}` : items[0].desc;
+      descs[1] = data.authenticated
+        ? (data.state && data.state.has_location
+            ? `最后更新 ${core.relativeTime(data.state.tst)} · 电量 ${data.state.batt}%`
+            : "暂时还没有位置")
+        : "需要访问码";
+      descs[2] = data.authenticated ? `${(data.videos || []).length} 条影像` : "需要访问码";
+      cards.forEach((card, position) => { card.querySelector("p").textContent = descs[position]; });
+      const pill = document.querySelector(".pill");
+      const status = document.createElement("span");
+      status.style.marginLeft = "8px";
+      status.style.opacity = ".7";
+      status.textContent = data.authenticated ? "已登录" : "未登录";
+      pill.appendChild(status);
+    })();
+
+    if (!reduce) {
+      cards.forEach((card, order) => {
+        setTimeout(() => card.classList.add("in"), 120 + order * 110);
+      });
+    } else {
+      cards.forEach(card => card.classList.add("in"));
+    }
+
+    /* 磁吸 CTA：指针在卡片内移动时，按钮轻微跟随 */
+    if (!reduce) {
+      cards.forEach(card => {
+        const cta = card.querySelector(".cta");
+        card.addEventListener("pointermove", event => {
+          const rect = card.getBoundingClientRect();
+          const x = (event.clientX - rect.left - rect.width / 2) / rect.width;
+          const y = (event.clientY - rect.top - rect.height / 2) / rect.height;
+          cta.style.transform = `translate3d(${x * 12}px, ${y * 8}px, 0)`;
+        });
+        card.addEventListener("pointerleave", () => { cta.style.transform = "none"; });
+      });
+    }
+
+    /* 视差：光斑随指针轻微移动（仅桌面、非减少动效） */
+    if (!reduce && matchMedia("(pointer: fine)").matches) {
+      const blobs = Array.from(document.querySelectorAll(".blob"));
+      window.addEventListener("pointermove", event => {
+        const nx = event.clientX / window.innerWidth - 0.5;
+        const ny = event.clientY / window.innerHeight - 0.5;
+        blobs.forEach(blob => {
+          const depth = Number(blob.dataset.depth) || 12;
+          blob.style.marginLeft = `${nx * depth}px`;
+          blob.style.marginTop = `${ny * depth}px`;
+        });
+      }, { passive: true });
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -8,7 +8,7 @@ web
 
 ## Users
 
-- The primary visitor is a single invited person. They may read a public letter and, if they choose, use a shared access code to view the owner's current location.
+- The primary visitor is one specific person, addressed as “访客”. She may read a public letter and, if she chooses, use a shared access code to view the owner's current location.
 - The owner writes and revises the letter, manages whether location sharing is active, and never receives the visitor's location.
 
 ## Product Purpose
@@ -36,7 +36,7 @@ This is a single-person “anchor”, not a general tracking product: a public l
 - The letter body and transition copy are intentionally undecided and must remain empty until supplied.
 - Confirmed closing intent: explain that only the owner's position is displayed, the visitor's location is not collected, opening the page sends no notification, and the site is the owner's next “anchor”.
 - Confirmed password copy:
-  - Initial hint: “访问码是 6 位数字，请向站主索取。” The hint stays generic and never reveals the real code.
+  - Initial hint: “访问码是 6 位数字，请向站主索取。” The phrase is a private mnemonic and does not refer to the owner's real phone unlock code.
   - First failure: “访问码不正确，请再试一次。”
   - Second failure: “访问码还是不对，注意位数。”
   - Third failure: “提示：访问码是 6 位数字。”

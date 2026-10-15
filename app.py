@@ -10,12 +10,22 @@ import hashlib
 import ipaddress
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import quote, unquote
 
 BASE = os.environ.get("LOCAPP_BASE", "/opt/locapp")
 STATIC = os.path.join(BASE, "static")
 STORE = os.environ.get("LOCAPP_STORE", "/opt/owntracks/store")
 FLAG = os.environ.get("LOCAPP_FLAG", "/opt/owntracks/owner/stopped")
 SECRET_FILE = os.environ.get("LOCAPP_SECRET_FILE", "/opt/locapp/secret")
+MEDIA = os.environ.get("LOCAPP_MEDIA", os.path.join(BASE, "media"))
+
+# 允许放进 media/ 目录的视频类型
+VIDEO_TYPES = {
+    ".mp4": "video/mp4",
+    ".m4v": "video/x-m4v",
+    ".mov": "video/quicktime",
+    ".webm": "video/webm",
+}
 
 FRIEND_CODE = os.environ.get("FRIEND_CODE", "123456")
 OWNER_PASS = os.environ.get("OWNER_PASS", "owner123")
@@ -104,6 +114,48 @@ def read_last_location():
     return best
 
 
+def list_videos():
+    """列出 media/ 目录里的视频（附带 captions.json 里的文字与拍摄时间），最新的排在最前面。"""
+    if not os.path.isdir(MEDIA):
+        return []
+    captions = {}
+    caption_file = os.path.join(MEDIA, "captions.json")
+    if os.path.isfile(caption_file):
+        try:
+            with open(caption_file, "r", encoding="utf-8") as f:
+                captions = json.load(f) or {}
+        except Exception:
+            captions = {}
+    items = []
+    for name in os.listdir(MEDIA):
+        if name.startswith("."):
+            continue
+        fp = os.path.join(MEDIA, name)
+        if not os.path.isfile(fp):
+            continue
+        ctype = VIDEO_TYPES.get(os.path.splitext(name)[1].lower())
+        if not ctype:
+            continue
+        try:
+            stat = os.stat(fp)
+        except OSError:
+            continue
+        meta = captions.get(name) or {}
+        items.append({
+            "name": name,
+            "title": os.path.splitext(name)[0],
+            "size": stat.st_size,
+            "mtime": int(stat.st_mtime),
+            "url": "/media/" + quote(name),
+            "type": ctype,
+            "caption": (meta.get("caption") or "").strip(),
+            "recorded": (meta.get("recorded") or "").strip(),
+        })
+    # 按"拍摄时间"倒序（最新拍的在前）；没记录拍摄时间的按上传时间排在后面
+    items.sort(key=lambda item: (item.get("recorded") or "", item["mtime"], item["name"]), reverse=True)
+    return items
+
+
 def stopped_flag():
     if not os.path.exists(FLAG):
         return False
@@ -158,6 +210,62 @@ class Handler(BaseHTTPRequestHandler):
         with open(fp, "rb") as f:
             body = f.read()
         self._send(200, body, ctype, headers=extra_headers)
+
+    def _media(self, name, head_only=False):
+        """按块发送视频文件，支持 Range 请求（手机浏览器拖动进度条需要）。"""
+        if not name or ".." in name or name.startswith("/"):
+            self._send(404, b"not found", "text/plain; charset=utf-8")
+            return
+        fp = os.path.join(MEDIA, name)
+        if not os.path.isfile(fp):
+            self._send(404, b"not found", "text/plain; charset=utf-8")
+            return
+        ctype = VIDEO_TYPES.get(os.path.splitext(fp)[1].lower(), "application/octet-stream")
+        size = os.path.getsize(fp)
+        start, end = 0, max(size - 1, 0)
+        status = 200
+        range_header = self.headers.get("Range", "").strip()
+        if range_header.startswith("bytes=") and size > 0:
+            spec = range_header[len("bytes="):].split(",")[0].strip()
+            first, _, last = spec.partition("-")
+            try:
+                if first:
+                    start = int(first)
+                    end = int(last) if last else size - 1
+                else:
+                    start = max(size - int(last), 0)
+                    end = size - 1
+            except ValueError:
+                start, end = 0, size - 1
+            if start >= size or start > end:
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{size}")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+            end = min(end, size - 1)
+            status = 206
+
+        length = end - start + 1
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Cache-Control", "no-store")
+        if status == 206:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Content-Length", str(length))
+        self.end_headers()
+        if head_only:
+            return
+        with open(fp, "rb") as f:
+            f.seek(start)
+            remaining = length
+            while remaining > 0:
+                chunk = f.read(min(65536, remaining))
+                if not chunk:
+                    break
+                self.wfile.write(chunk)
+                remaining -= len(chunk)
 
     def _client_ip(self):
         peer_text = self.client_address[0]
@@ -249,7 +357,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?")[0]
         noindex = {"X-Robots-Tag": "noindex, nofollow, noarchive"}
-        if path == "/":
+        if path in ("/", "/new"):
+            # 新版首页（2026-10-09 起作为默认入口；/new 保留以免旧链接失效）
+            self._static("home.html", extra_headers=noindex)
+        elif path == "/legacy":
+            # 旧版首页，保留以便随时回退
             self._static("index.html", extra_headers=noindex)
         elif path == "/robots.txt":
             self._send(200, b"User-agent: *\nDisallow: /\n", "text/plain; charset=utf-8")
@@ -285,9 +397,31 @@ class Handler(BaseHTTPRequestHandler):
                     "batt": loc.get("batt"),
                 })
             self._json(200, state)
+        elif path == "/api/videos":
+            if not self._cookie():
+                self._json(401, {"ok": False, "error": "unauthorized"})
+                return
+            self._json(200, {"ok": True, "videos": list_videos()})
+        elif path.startswith("/media/"):
+            if not self._cookie():
+                self._send(403, b"forbidden", "text/plain; charset=utf-8")
+                return
+            self._media(unquote(path[len("/media/"):]))
         elif path == "/api/logout":
             self._send(200, b"ok", "text/plain; charset=utf-8",
                        headers={"Set-Cookie": "loc_auth=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"})
+        elif path.startswith("/static/"):
+            self._static(path[len("/static/"):])
+        else:
+            self._send(404, b"not found", "text/plain; charset=utf-8")
+
+    def do_HEAD(self):
+        path = self.path.split("?")[0]
+        if path.startswith("/media/"):
+            if not self._cookie():
+                self._send(403, b"forbidden", "text/plain; charset=utf-8")
+                return
+            self._media(unquote(path[len("/media/"):]), head_only=True)
         elif path.startswith("/static/"):
             self._static(path[len("/static/"):])
         else:

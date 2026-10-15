@@ -24,7 +24,7 @@
 - Honor `prefers-reduced-motion`; remove long-distance movement and parallax while keeping meaningful feedback.
 - Do not redesign `static/owner.html`; only repair the existing JavaScript string syntax defect and preserve its behavior.
 - Do not add a package manager, framework, animation dependency, font download, image background, or build pipeline.
-- Git safety: the current `git rev-parse --show-toplevel` resolves to `/Users/hl`, not this project. Never commit to that parent repository. Commit steps below run only after the project has a safe independent Git root; otherwise record the checkpoint and leave changes uncommitted.
+- Git safety: the current `git rev-parse --show-toplevel` resolves to `~`, not this project. Never commit to that parent repository. Commit steps below run only after the project has a safe independent Git root; otherwise record the checkpoint and leave changes uncommitted.
 
 ## Planned File Structure
 
@@ -1153,7 +1153,7 @@ Open each captured image once and confirm it is not blank, clipped, mid-animatio
 - [ ] **Step 6: Run the Impeccable mechanical detector once and batch fixes**
 
 ```bash
-node /Users/hl/.codex/skills/impeccable/scripts/detect.mjs --json static/index.html static/theme.css static/experience.css static/experience.js static/map.html static/map.css static/map.js
+node ~/.codex/skills/impeccable/scripts/detect.mjs --json static/index.html static/theme.css static/experience.css static/experience.js static/map.html static/map.css static/map.js
 ```
 
 Fix all mechanical findings that do not conflict with the confirmed design in one batch. Re-run the automated suite, then perform at most one confirmation screenshot round.

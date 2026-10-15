@@ -30,6 +30,30 @@ test("letter_seen changes emphasis without removing an entry", () => {
   assert.deepEqual(core.entryPriority(true), { primary: "location", secondary: "letter" });
 });
 
+test("the videos entry is a separate route that returns home", () => {
+  assert.equal(core.nextView("entry", "OPEN_VIDEOS"), "videos");
+  assert.equal(core.nextView("entry", "OPEN_VIDEOS_AUTH"), "password-idle");
+  assert.equal(core.nextView("password-success", "SHOW_VIDEOS"), "videos");
+  assert.equal(core.nextView("videos", "BACK"), "entry");
+  assert.throws(() => core.nextView("videos", "OPEN_LETTER"), /Invalid transition/);
+});
+
+test("video switching mirrors app-card motion and honours reduced motion", () => {
+  const forward = core.videoSwitchMotion(false, 1);
+  assert.equal(forward.duration, 420);
+  assert.match(forward.outgoingKeyframes[1].transform, /translate3d\(-18%/);
+  assert.match(forward.incomingKeyframes[0].transform, /translate3d\(22%/);
+
+  const backward = core.videoSwitchMotion(false, -1);
+  assert.match(backward.outgoingKeyframes[1].transform, /translate3d\(18%/);
+  assert.match(backward.incomingKeyframes[0].transform, /translate3d\(-22%/);
+
+  const reduced = core.videoSwitchMotion(true, 1);
+  assert.equal(reduced.duration, 160);
+  assert.ok(reduced.incomingKeyframes.every(frame => !("transform" in frame)));
+  assert.ok(reduced.outgoingKeyframes.every(frame => !("transform" in frame)));
+});
+
 test("password hints stop escalating after the third failure", () => {
   assert.equal(core.failureHint(1, content), "访问码不正确，请再试一次。");
   assert.equal(core.failureHint(2, content), "访问码还是不对，注意位数。");

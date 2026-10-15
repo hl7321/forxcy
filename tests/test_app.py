@@ -16,6 +16,7 @@ ENVIRONMENT_KEYS = (
     "LOCAPP_STORE",
     "LOCAPP_FLAG",
     "LOCAPP_SECRET_FILE",
+    "LOCAPP_MEDIA",
     "FRIEND_CODE",
     "OWNER_PASS",
     "LOCAPP_TRUSTED_PROXY_CIDRS",
@@ -38,7 +39,15 @@ class LocAppServerTest(unittest.TestCase):
         })
         (root / "static").mkdir()
         (root / "static" / "index.html").write_text("entry", encoding="utf-8")
+        (root / "static" / "home.html").write_text("home", encoding="utf-8")
         (root / "static" / "map.html").write_text("map", encoding="utf-8")
+        media = root / "media"
+        media.mkdir()
+        (media / "a-clip.mp4").write_bytes(b"abcdefghij")
+        (media / "b-clip.mp4").write_bytes(b"0123456789")
+        (media / "notes.txt").write_text("not a video", encoding="utf-8")
+        os.utime(media / "a-clip.mp4", (1_700_000_000, 1_700_000_000))
+        os.utime(media / "b-clip.mp4", (1_700_000_600, 1_700_000_600))
         sys.modules.pop("app", None)
         cls.app = importlib.import_module("app")
         cls.server = cls.app.create_server("127.0.0.1", 0)
@@ -80,9 +89,33 @@ class LocAppServerTest(unittest.TestCase):
         except urllib.error.HTTPError as error:
             return error
 
+    def visitor_cookie(self):
+        response = self.request("/api/login", "POST", {"code": "654321"})
+        return response.headers["Set-Cookie"].split(";", 1)[0]
+
     def test_public_root_and_protected_map(self):
         self.assertEqual(self.request("/").status, 200)
         self.assertEqual(self.request("/map").geturl(), self.base + "/")
+
+    def test_root_serves_the_new_homepage_and_legacy_keeps_the_old_one(self):
+        root = self.request("/")
+        self.assertEqual(root.status, 200)
+        self.assertEqual(root.read(), b"home")
+        self.assertEqual(root.headers["X-Robots-Tag"], "noindex, nofollow, noarchive")
+
+        legacy = self.request("/legacy")
+        self.assertEqual(legacy.status, 200)
+        self.assertEqual(legacy.read(), b"entry")
+
+        new_alias = self.request("/new")
+        self.assertEqual(new_alias.status, 200)
+        self.assertEqual(new_alias.read(), b"home")
+
+    def test_new_homepage_route_serves_the_redesign_and_stays_unindexed(self):
+        response = self.request("/new")
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.read(), b"home")
+        self.assertEqual(response.headers["X-Robots-Tag"], "noindex, nofollow, noarchive")
 
     def test_login_cookie_unlocks_state_and_map(self):
         response = self.request("/api/login", "POST", {"code": "654321"})
@@ -254,6 +287,84 @@ class LocAppServerTest(unittest.TestCase):
         (static / "sample.js").write_text("window.ok = true;", encoding="utf-8")
         response = self.request("/static/sample.js")
         self.assertIn("application/javascript", response.headers["Content-Type"])
+
+    def test_videos_endpoint_lists_only_videos_newest_first(self):
+        response = self.request("/api/videos", cookie=self.visitor_cookie())
+        self.assertEqual(response.status, 200)
+        data = json.loads(response.read().decode("utf-8"))
+        self.assertTrue(data["ok"])
+        self.assertEqual([item["name"] for item in data["videos"]], ["b-clip.mp4", "a-clip.mp4"])
+        first = data["videos"][0]
+        self.assertEqual(first["title"], "b-clip")
+        self.assertEqual(first["url"], "/media/b-clip.mp4")
+        self.assertEqual(first["type"], "video/mp4")
+        self.assertEqual(first["size"], 10)
+
+    def test_videos_endpoint_reports_an_empty_library(self):
+        media = Path(os.environ["LOCAPP_BASE"]) / "media"
+        empty = Path(os.environ["LOCAPP_BASE"]) / "empty-media"
+        empty.mkdir(exist_ok=True)
+        original = os.environ.get("LOCAPP_MEDIA")
+        os.environ["LOCAPP_MEDIA"] = str(empty)
+        self.app.MEDIA = str(empty)
+        try:
+            data = json.loads(self.request("/api/videos", cookie=self.visitor_cookie()).read().decode("utf-8"))
+            self.assertEqual(data["videos"], [])
+        finally:
+            self.app.MEDIA = str(media)
+            if original is None:
+                os.environ.pop("LOCAPP_MEDIA", None)
+            else:
+                os.environ["LOCAPP_MEDIA"] = original
+
+    def test_videos_endpoint_merges_caption_metadata(self):
+        media = Path(os.environ["LOCAPP_BASE"]) / "media"
+        (media / "captions.json").write_text(
+            json.dumps({"b-clip.mp4": {"caption": "2026.10.4，测试文案", "recorded": "2026-10-04 16:40:43"}},
+                       ensure_ascii=False),
+            encoding="utf-8",
+        )
+        try:
+            data = json.loads(self.request("/api/videos", cookie=self.visitor_cookie()).read().decode("utf-8"))
+            first = data["videos"][0]
+            self.assertEqual(first["name"], "b-clip.mp4")
+            self.assertEqual(first["caption"], "2026.10.4，测试文案")
+            self.assertEqual(first["recorded"], "2026-10-04 16:40:43")
+        finally:
+            (media / "captions.json").unlink(missing_ok=True)
+
+    def test_media_endpoint_serves_full_files_and_byte_ranges(self):
+        cookie = self.visitor_cookie()
+        full = self.request("/media/a-clip.mp4", cookie=cookie)
+        self.assertEqual(full.status, 200)
+        self.assertEqual(full.headers["Accept-Ranges"], "bytes")
+        self.assertEqual(full.headers["Content-Type"], "video/mp4")
+        self.assertEqual(full.read(), b"abcdefghij")
+
+        middle = self.request("/media/a-clip.mp4", cookie=cookie, headers={"Range": "bytes=2-5"})
+        self.assertEqual(middle.status, 206)
+        self.assertEqual(middle.headers["Content-Range"], "bytes 2-5/10")
+        self.assertEqual(middle.read(), b"cdef")
+
+        tail = self.request("/media/a-clip.mp4", cookie=cookie, headers={"Range": "bytes=6-"})
+        self.assertEqual(tail.status, 206)
+        self.assertEqual(tail.read(), b"ghij")
+
+    def test_media_endpoint_rejects_missing_files_and_traversal(self):
+        cookie = self.visitor_cookie()
+        self.assertEqual(self.request("/media/missing.mp4", cookie=cookie).status, 404)
+        self.assertEqual(self.request("/media/..%2Fsecret", cookie=cookie).status, 404)
+
+    def test_media_head_request_returns_headers_without_a_body(self):
+        response = self.request("/media/a-clip.mp4", method="HEAD", cookie=self.visitor_cookie())
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.headers["Content-Length"], "10")
+        self.assertEqual(response.read(), b"")
+
+    def test_videos_and_media_require_the_visitor_code(self):
+        self.assertEqual(self.request("/api/videos").status, 401)
+        self.assertEqual(self.request("/media/a-clip.mp4").status, 403)
+        self.assertEqual(self.request("/media/a-clip.mp4", method="HEAD").status, 403)
 
 
 class ZEnvironmentCleanupTest(unittest.TestCase):

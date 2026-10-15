@@ -3,6 +3,7 @@
 .worktrees/
 .impeccable/review/
 work/
+media/
 __pycache__/
 *.py[cod]
 .env

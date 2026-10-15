@@ -4,10 +4,11 @@
   const content = window.LOCAPP_CONTENT;
   const core = window.LocExperience;
   const byId = id => document.getElementById(id);
-  const views = ["entry", "letter", "transition", "password"];
+  const views = ["entry", "letter", "videos", "transition", "password"];
   const stateToView = Object.freeze({
     entry: "entry",
     letter: "letter",
+    videos: "videos",
     transition: "transition",
     "password-idle": "password",
     "password-submitting": "password",
@@ -17,7 +18,12 @@
   let currentState = "entry";
   let failureCount = 0;
   let lockedUntil = 0;
-  let openingLocation = false;
+  let openingFlow = false;
+  let authTarget = "location";
+  let videoItems = [];
+  let videoIndex = 0;
+  let videoSwitching = false;
+  let videoTouchStartX = null;
   let letterRun = 0;
   let letterPaused = false;
   let activeLetterAnimation = null;
@@ -81,6 +87,8 @@
     document.querySelector('[data-copy="letter-description"]').textContent = content.entry.letterDescription;
     document.querySelector('[data-copy="location-title"]').textContent = content.entry.locationTitle;
     document.querySelector('[data-copy="location-description"]').textContent = content.entry.locationDescription;
+    document.querySelector('[data-copy="videos-title"]').textContent = content.entry.videosTitle;
+    document.querySelector('[data-copy="videos-description"]').textContent = content.entry.videosDescription;
     appendParagraphs(byId("letter-opening"), content.letter.opening);
     appendParagraphs(byId("letter-body"), content.letter.body);
     appendParagraphs(byId("letter-closing"), content.letter.closing);
@@ -273,8 +281,8 @@
   }
 
   async function openLocation({ fromLetter = false } = {}) {
-    if (openingLocation) return;
-    openingLocation = true;
+    if (openingFlow) return;
+    openingFlow = true;
     try {
       const session = await checkExistingSession();
       if (fromLetter) markLetterSeen();
@@ -286,11 +294,162 @@
         window.location.assign("/map");
         return;
       }
+      setPasswordContext("location");
       if (fromLetter) move("COMPLETE");
       else move("OPEN_LOCATION");
       if (session.networkError) byId("password-feedback").textContent = NETWORK_ERROR;
     } finally {
-      openingLocation = false;
+      openingFlow = false;
+    }
+  }
+
+  function setPasswordContext(target) {
+    authTarget = target;
+    byId("password-title").textContent = target === "videos"
+      ? content.videos.title
+      : content.password.locationTitle;
+    byId("password-hint").textContent = content.password.initialHint;
+    byId("password-feedback").textContent = "";
+  }
+
+  function formatVideoSize(bytes) {
+    const value = Number(bytes);
+    if (!Number.isFinite(value) || value <= 0) return "";
+    const megabytes = value / (1024 * 1024);
+    if (megabytes >= 1) return `${megabytes.toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(value / 1024))} KB`;
+  }
+
+  function stopVideoPlayback() {
+    const list = byId("video-list");
+    if (!list || typeof list.querySelectorAll !== "function") return;
+    list.querySelectorAll("video").forEach(player => {
+      if (player && typeof player.pause === "function") player.pause();
+    });
+  }
+
+  function renderVideos(videos) {
+    const list = byId("video-list");
+    const feedback = byId("videos-feedback");
+    videoItems = videos;
+    videoIndex = 0;
+    if (!videos.length) {
+      list.replaceChildren();
+      byId("video-controls").hidden = true;
+      byId("video-caption").textContent = "";
+      byId("video-counter").textContent = "";
+      feedback.textContent = content.videos.empty;
+      return;
+    }
+    feedback.textContent = "";
+    list.replaceChildren(...videos.map((video, index) => {
+      const card = document.createElement("article");
+      card.className = "video-card";
+      card.dataset.index = String(index);
+      const player = document.createElement("video");
+      player.controls = true;
+      player.preload = "metadata";
+      player.playsInline = true;
+      player.setAttribute("playsinline", "");
+      player.setAttribute("controlslist", "nodownload");
+      player.src = video.url;
+      const title = video.title || video.name || "";
+      player.setAttribute("aria-label", title);
+      player.addEventListener("loadedmetadata", () => {
+        if (player.videoWidth && player.videoHeight && player.style) {
+          player.style.aspectRatio = `${player.videoWidth} / ${player.videoHeight}`;
+        }
+      });
+      card.replaceChildren(player);
+      card.hidden = index !== 0;
+      return card;
+    }));
+    byId("video-controls").hidden = videos.length < 2;
+    updateVideoCaption();
+  }
+
+  function videoLabel(video) {
+    const title = video.title || video.name || "";
+    const size = formatVideoSize(video.size);
+    return size ? `${title} · ${size}` : title;
+  }
+
+  function updateVideoCaption() {
+    const video = videoItems[videoIndex];
+    byId("video-caption").textContent = video ? videoLabel(video) : "";
+    byId("video-counter").textContent = videoItems.length
+      ? `${videoIndex + 1} / ${videoItems.length}`
+      : "";
+  }
+
+  function pauseCard(card) {
+    if (!card || typeof card.querySelector !== "function") return;
+    const player = card.querySelector("video");
+    if (player && typeof player.pause === "function") player.pause();
+  }
+
+  async function switchVideo(step) {
+    const cards = Array.from(byId("video-list").children);
+    if (cards.length < 2 || videoSwitching) return;
+    const total = cards.length;
+    const nextIndex = ((videoIndex + step) % total + total) % total;
+    if (nextIndex === videoIndex) return;
+    const outgoing = cards[videoIndex];
+    const incoming = cards[nextIndex];
+    videoSwitching = true;
+    pauseCard(outgoing);
+    incoming.hidden = false;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const motion = core.videoSwitchMotion(reduce, step);
+    const timing = {
+      duration: motion.duration,
+      easing: "cubic-bezier(.16,1,.3,1)",
+      fill: "both",
+    };
+    videoIndex = nextIndex;
+    updateVideoCaption();
+    await Promise.all([
+      animateSafely(incoming, motion.incomingKeyframes, timing),
+      animateSafely(outgoing, motion.outgoingKeyframes, timing),
+    ]);
+    outgoing.hidden = true;
+    videoSwitching = false;
+  }
+
+  async function loadVideos() {
+    const feedback = byId("videos-feedback");
+    feedback.textContent = content.videos.loading;
+    try {
+      const result = await fetchWithTimeout("/api/videos", { cache: "no-store" },
+        async videosResponse => ({
+          response: videosResponse,
+          data: await videosResponse.json(),
+        }));
+      if (!result.response.ok || !result.data.ok || !Array.isArray(result.data.videos)) {
+        throw new Error("unexpected videos response");
+      }
+      renderVideos(result.data.videos);
+    } catch (_) {
+      byId("video-list").replaceChildren();
+      feedback.textContent = content.videos.error;
+    }
+  }
+
+  async function openVideos() {
+    if (openingFlow) return;
+    openingFlow = true;
+    try {
+      const session = await checkExistingSession();
+      if (session.authenticated) {
+        move("OPEN_VIDEOS");
+        await loadVideos();
+        return;
+      }
+      setPasswordContext("videos");
+      move("OPEN_VIDEOS_AUTH");
+      if (session.networkError) byId("password-feedback").textContent = NETWORK_ERROR;
+    } finally {
+      openingFlow = false;
     }
   }
 
@@ -381,6 +540,12 @@
       byId("password-feedback").textContent = content.password.success;
       document.documentElement.dataset.auth = "success";
       await runPasswordSuccessTransition(boxes);
+      if (authTarget === "videos") {
+        delete document.documentElement.dataset.auth;
+        move("SHOW_VIDEOS");
+        await loadVideos();
+        return;
+      }
       window.location.assign("/map");
       return;
     }
@@ -435,14 +600,43 @@
 
   function bindControls(boxes) {
     byId("open-letter").addEventListener("click", () => {
-      if (!openingLocation) {
+      if (!openingFlow) {
         move("OPEN_LETTER");
         startLetterPlayback();
       }
     });
     byId("open-location").addEventListener("click", () => openLocation());
+    byId("open-videos").addEventListener("click", () => { openVideos(); });
+    byId("videos-back").addEventListener("click", () => {
+      stopVideoPlayback();
+      move("BACK");
+    });
+    byId("video-prev").addEventListener("click", () => { switchVideo(-1); });
+    byId("video-next").addEventListener("click", () => { switchVideo(1); });
+    const stage = byId("video-stage");
+    stage.addEventListener("touchstart", event => {
+      const touch = event.changedTouches && event.changedTouches[0];
+      videoTouchStartX = touch ? touch.clientX : null;
+    }, { passive: true });
+    stage.addEventListener("touchend", event => {
+      const touch = event.changedTouches && event.changedTouches[0];
+      if (videoTouchStartX === null || !touch) return;
+      const delta = touch.clientX - videoTouchStartX;
+      videoTouchStartX = null;
+      if (Math.abs(delta) > 40) switchVideo(delta < 0 ? 1 : -1);
+    });
+    window.addEventListener("keydown", event => {
+      if (currentState !== "videos") return;
+      if (event.key === "ArrowLeft") {
+        if (event.preventDefault) event.preventDefault();
+        switchVideo(-1);
+      } else if (event.key === "ArrowRight") {
+        if (event.preventDefault) event.preventDefault();
+        switchVideo(1);
+      }
+    });
     byId("letter-back").addEventListener("click", () => {
-      if (!openingLocation) {
+      if (!openingFlow) {
         stopLetterPlayback("full");
         move("BACK");
       }

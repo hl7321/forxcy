@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF3E7">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>欢迎你，访客</title>
+<link rel="stylesheet" href="/static/home.css">
+</head>
+<body>
+  <!--
+    THESIS: 三个入口做成三张可轮播的卡片，中间那张是当下的主角。
+    OWN-WORLD: 饱和但降过饱和的珊瑚/草绿/粉，奶油色卡片，胶囊按钮，颗粒噪点。
+    STORY: 访客左右切换，选一张卡进去：读信、看位置、看影像。
+  -->
+  <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <main class="stage">
+    <header>
+      <h1 class="brand" id="brand">一个新的锚点<small>ANCHOR</small></h1>
+      <span class="hint">左右切换 · 点中间进入</span>
+    </header>
+
+    <div class="ghost" id="ghost" aria-hidden="true">LETTER</div>
+
+    <div class="carousel" id="carousel" role="group" aria-label="三个入口"></div>
+
+    <div class="bottom">
+      <div class="copy">
+        <h2 id="copy-title">读一封信</h2>
+        <p id="copy-desc"></p>
+      </div>
+      <div class="actions">
+        <button class="nav-btn" id="prev" type="button" aria-label="上一个入口">←</button>
+        <span class="counter" id="counter" aria-hidden="true">1 / 3</span>
+        <button class="nav-btn" id="next" type="button" aria-label="下一个入口">→</button>
+        <button class="cta" id="enter" type="button">进入</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="anchor-panel" id="panel" hidden></div>
+
+  <section class="videos-view" id="view-videos" hidden aria-labelledby="videos-heading">
+    <header class="videos-header">
+      <button class="videos-back" id="videos-back" type="button">← 返回</button>
+      <h2 id="videos-heading">一些影像</h2>
+      <span class="videos-counter" id="videos-counter" aria-hidden="true"></span>
+    </header>
+    <div class="videos-stage" id="videos-stage" aria-label="影像列表"></div>
+    <p class="videos-note" id="videos-note" hidden></p>
+    <p class="videos-feedback" id="videos-feedback" aria-live="polite"></p>
+  </section>
+
+  <noscript>
+    <article class="noscript-letter">
+      <h2>一封信</h2>
+      <p>你好，这是一封示例信。</p>
+      <p>欢迎来到这个新的锚点。</p>
+      <p>这里是一段示例正文。你可以把它替换成任何想写给访客的内容。</p>
+      <p>正文内容统一放在 static/content.js 里配置，改完刷新页面即可生效。</p>
+      <p>这一页只在访客主动输入访问码之后才会展示位置。</p>
+      <p>示例段落：这里可以放第二段正文。</p>
+      <p>示例段落：这里可以放第三段正文。</p>
+      <p>示例段落：这里可以放第四段正文。</p>
+      <p>示例段落：这里可以放第五段正文。</p>
+      <p>示例段落：这里可以放最后一段正文。</p>
+      <p>这里只会展示站主的位置，不会获取访客的定位，所以站主看不到你在哪里。</p>
+      <p>访客打开这个页面时，站主不会收到任何通知。</p>
+      <p>这个站点主要用于演示单向位置分享。</p>
+      <p class="noscript-note">查看位置和影像需要启用 JavaScript。</p>
+    </article>
+  </noscript>
+
+  <script src="/static/content.js"></script>
+  <script src="/static/anchor-core.js"></script>
+  <script src="/static/home.js"></script>
+</body>
+</html>

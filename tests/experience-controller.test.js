@@ -97,19 +97,24 @@ async function createHarness(reduce, {
     "password-hint", "otp", "open-letter", "open-location", "letter-back",
     "letter-continue", "password-back", "experience-shell", "view-entry", "view-letter",
     "view-transition", "view-password", "password-feedback", "password-title",
-    "letter-copy", "letter-pause", "letter-full",
+    "letter-copy", "letter-pause", "letter-full", "open-videos", "videos-back",
+    "video-list", "videos-feedback", "view-videos", "videos-heading", "video-stage",
+    "video-caption", "video-controls", "video-prev", "video-next", "video-counter",
   ];
   const elements = new Map(ids.map((id) => [id, new FakeElement(id)]));
   elements.get("otp").rect = { left: 20, width: 300, height: 56 };
   elements.get("view-entry").queryTarget = elements.get("open-letter");
   elements.get("view-letter").queryTarget = elements.get("letter-back");
   elements.get("view-password").queryTarget = elements.get("password-back");
+  elements.get("view-videos").queryTarget = elements.get("videos-back");
 
   const dataCopy = new Map([
     ["letter-title", new FakeElement()],
     ["letter-description", new FakeElement()],
     ["location-title", new FakeElement()],
     ["location-description", new FakeElement()],
+    ["videos-title", new FakeElement()],
+    ["videos-description", new FakeElement()],
   ]);
   const travelingAnchor = new FakeElement("traveling-anchor");
   elements.get("letter-continue").rect = { top: 900, bottom: 944, left: 0, width: 120, height: 44 };
@@ -531,4 +536,113 @@ test("caption sequence waits for its duration when animation.finished is unavail
   await harness.runTimers(harness.animations[0].timing.duration);
   assert.equal(harness.animations.length, 2);
   assert.equal(harness.animations[1].element.textContent, content.letter.body[1]);
+});
+
+test("an authenticated visitor opens the videos entry without re-entering the code", async () => {
+  const session = { ok: true, status: 200, async json() { return { ok: true }; } };
+  const listing = {
+    ok: true,
+    status: 200,
+    async json() {
+      return {
+        ok: true,
+        videos: [
+          { name: "b.mp4", title: "b", size: 2 * 1024 * 1024, url: "/media/b.mp4", type: "video/mp4" },
+          { name: "a.mp4", title: "a", size: 900, url: "/media/a.mp4", type: "video/mp4" },
+        ],
+      };
+    },
+  };
+  const harness = await createHarness(false, { autoLogin: false, fetches: [session, listing] });
+
+  harness.elements.get("open-videos").dispatch("click");
+  await harness.flush();
+  await harness.flush();
+
+  assert.equal(harness.elements.get("experience-shell").dataset.state, "videos");
+  assert.equal(harness.elements.get("videos-feedback").textContent, "");
+  const cards = harness.elements.get("video-list").children;
+  assert.equal(cards.length, 2);
+  const [player] = cards[0].children;
+  assert.equal(player.src, "/media/b.mp4");
+  assert.equal(player.controls, true);
+  assert.equal(player.preload, "metadata");
+  assert.equal(player.playsInline, true);
+  assert.equal(player.attributes.get("playsinline"), "");
+  assert.equal(player.attributes.get("aria-label"), "b");
+  assert.equal(cards[0].hidden, false, "the first card is the visible one");
+  assert.equal(cards[1].hidden, true, "other cards wait off-stage");
+  assert.equal(harness.elements.get("video-caption").textContent, "b · 2.0 MB");
+  assert.equal(harness.elements.get("video-counter").textContent, "1 / 2");
+  assert.equal(harness.elements.get("video-controls").hidden, false);
+
+  harness.elements.get("video-next").dispatch("click");
+  await harness.finishAnimations();
+  assert.equal(harness.elements.get("video-counter").textContent, "2 / 2");
+  assert.equal(harness.elements.get("video-caption").textContent, "a · 1 KB");
+  assert.equal(cards[1].hidden, false);
+  assert.equal(cards[0].hidden, true);
+
+  harness.elements.get("video-prev").dispatch("click");
+  await harness.finishAnimations();
+  assert.equal(harness.elements.get("video-counter").textContent, "1 / 2");
+
+  harness.elements.get("videos-back").dispatch("click");
+  assert.equal(harness.elements.get("experience-shell").dataset.state, "entry");
+});
+
+test("an unauthenticated visitor must enter the access code before videos appear", async () => {
+  const session = { ok: false, status: 401, async json() { return { ok: false }; } };
+  const login = { ok: true, status: 200, async json() { return { ok: true }; } };
+  const listing = {
+    ok: true,
+    status: 200,
+    async json() {
+      return {
+        ok: true,
+        videos: [{ name: "clip.mp4", title: "clip", size: 4096, url: "/media/clip.mp4", type: "video/mp4" }],
+      };
+    },
+  };
+  const harness = await createHarness(false, { autoLogin: false, fetches: [session, login, listing] });
+
+  harness.elements.get("open-videos").dispatch("click");
+  await harness.flush();
+  assert.equal(harness.elements.get("experience-shell").dataset.state, "password-idle");
+  assert.equal(harness.elements.get("password-title").textContent, content.videos.title);
+
+  harness.boxes.forEach((box) => { box.value = "1"; });
+  harness.boxes.at(-1).dispatch("keydown", { key: "Enter", preventDefault() {} });
+  await harness.flush();
+  assert.equal(harness.elements.get("experience-shell").dataset.state, "password-success");
+
+  await harness.finishAnimations();
+  await harness.flush();
+  assert.deepEqual(harness.redirects, [], "videos must never redirect to the map");
+  assert.equal(harness.elements.get("experience-shell").dataset.state, "videos");
+  assert.equal(harness.elements.get("video-list").children.length, 1);
+  assert.equal(harness.elements.get("video-list").children[0].children[0].src, "/media/clip.mp4");
+});
+
+test("the videos entry explains an empty library and a failed listing", async () => {
+  const session = { ok: true, status: 200, async json() { return { ok: true }; } };
+  const empty = { ok: true, status: 200, async json() { return { ok: true, videos: [] }; } };
+  const harness = await createHarness(false, { autoLogin: false, fetches: [session, empty] });
+
+  harness.elements.get("open-videos").dispatch("click");
+  await harness.flush();
+  await harness.flush();
+  assert.equal(harness.elements.get("videos-feedback").textContent, content.videos.empty);
+  assert.equal(harness.elements.get("video-list").children.length, 0);
+
+  const failing = { ok: false, status: 500, async json() { return { ok: false }; } };
+  const broken = await createHarness(false, {
+    autoLogin: false,
+    fetches: [{ ok: true, status: 200, async json() { return { ok: true }; } }, failing],
+  });
+  broken.elements.get("open-videos").dispatch("click");
+  await broken.flush();
+  await broken.flush();
+  assert.equal(broken.elements.get("videos-feedback").textContent, content.videos.error);
+  assert.equal(broken.elements.get("video-list").children.length, 0);
 });

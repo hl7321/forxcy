@@ -46,14 +46,42 @@
     };
   }
 
+  function videoSwitchMotion(reduce, direction) {
+    const step = direction < 0 ? -1 : 1;
+    if (reduce) {
+      return {
+        duration: 160,
+        outgoingKeyframes: [{ opacity: 1 }, { opacity: 0 }],
+        incomingKeyframes: [{ opacity: 0 }, { opacity: 1 }],
+      };
+    }
+    return {
+      duration: 420,
+      outgoingKeyframes: [
+        { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1, offset: 0 },
+        { transform: `translate3d(${-18 * step}%, 0, 0) scale(.88)`, opacity: 0, offset: 1 },
+      ],
+      incomingKeyframes: [
+        { transform: `translate3d(${22 * step}%, 0, 0) scale(.88)`, opacity: 0, offset: 0 },
+        { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1, offset: 1 },
+      ],
+    };
+  }
+
   const transitions = Object.freeze({
-    entry: Object.freeze({ OPEN_LETTER: "letter", OPEN_LOCATION: "password-idle" }),
+    entry: Object.freeze({
+      OPEN_LETTER: "letter",
+      OPEN_LOCATION: "password-idle",
+      OPEN_VIDEOS: "videos",
+      OPEN_VIDEOS_AUTH: "password-idle",
+    }),
     letter: Object.freeze({ BACK: "entry", CONTINUE: "transition" }),
+    videos: Object.freeze({ BACK: "entry" }),
     transition: Object.freeze({ COMPLETE: "password-idle" }),
     "password-idle": Object.freeze({ BACK: "entry", SUBMIT: "password-submitting" }),
     "password-error": Object.freeze({ BACK: "entry", SUBMIT: "password-submitting" }),
     "password-submitting": Object.freeze({ FAIL: "password-error", SUCCESS: "password-success" }),
-    "password-success": Object.freeze({}),
+    "password-success": Object.freeze({ SHOW_VIDEOS: "videos" }),
   });
 
   function nextView(current, event) {
@@ -68,5 +96,6 @@
     locationFreshness,
     nextView,
     passwordSuccessMotion,
+    videoSwitchMotion,
   });
 });

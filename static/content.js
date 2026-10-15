@@ -7,9 +7,16 @@
     entry: Object.freeze({
       greeting: "一个新的锚点",
       letterTitle: "读一封信",
-      letterDescription: "有几句话，想安静地留在这里。",
+      letterDescription: "",
       locationTitle: "查看位置",
-      locationDescription: "直接看看我现在在哪里。",
+      locationDescription: "看看我在哪里",
+      videosTitle: "看一些影像",
+      videosDescription: "我会持续更新的哦",
+    }),
+    videos: Object.freeze({
+      loading: "正在加载……",
+      empty: "这里还没有内容。",
+      error: "暂时无法加载，请稍后再试。",
     }),
     letter: Object.freeze({
       opening: Object.freeze(["你好，这是一封示例信。", "欢迎来到这个新的锚点。"]),
@@ -31,6 +38,8 @@
     }),
     transition: Object.freeze({ lines: Object.freeze([]) }),
     password: Object.freeze({
+      locationTitle: "查看位置",
+      videosTitle: "看一些影像",
       initialHint: "访问码是 6 位数字，请向站主索取。",
       failureHints: Object.freeze([
         "访问码不正确，请再试一次。",
